@@ -2,25 +2,45 @@
 const state = {
   contacts: [],
   bookings: [],
-  users: [
-    { id: 1, name: 'Grace Wanjiku', email: 'grace@email.com', phone: '+254712345678', role: 'Tenant', joined: 'Jan 2025', status: 'Active' },
-    { id: 2, name: 'James Kamau', email: 'jkamau@email.com', phone: '+254722111222', role: 'Landlord', joined: 'Dec 2024', status: 'Verified' },
-    { id: 3, name: 'Amina Otieno', email: 'amina@email.com', phone: '+254733456789', role: 'Landlord', joined: 'Mar 2025', status: 'Pending' }
-  ],
-  properties: [
-    { id: 1, name: 'Sunrise Apartments 3B', rent: 12000, status: 'Occupied', tenant: 'Grace Wanjiku' },
-    { id: 2, name: 'Lake View Villa', rent: 45000, status: 'Occupied', tenant: 'Peter Otieno' }
-  ],
-  maintenance: [
-    { id: 1, issue: 'Leaking tap — bathroom', date: '15 Mar 2025', type: 'Plumbing', status: 'In Progress', icon: '🔧' },
-    { id: 2, issue: 'Pest control — kitchen', date: '18 Mar 2025', type: 'Pest Control', status: 'Pending', icon: '🐜' }
-  ]
+  users: [],
+  properties: [],
+  maintenance: []
 };
 
-function saveState() { localStorage.setItem('marshal_state', JSON.stringify(state)); }
-function loadState() {
-  const saved = localStorage.getItem('marshal_state');
-  if (saved) Object.assign(state, JSON.parse(saved));
+// --- NEW AUTH ENGINE (Replacing Demo Accounts) ---
+window.platformSignup = async function(email, password, name, role) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, role } }
+  });
+  if (error) { toast('❌ Error: ' + error.message, false); return; }
+  if (data.user) {
+    // Also save a record in our profiles table
+    await supabase.from('profiles').insert([{ id: data.user.id, name, role, email }]);
+    toast('✅ Registration successful! Please verify your email.', true);
+  }
+};
+
+window.platformLogin = async function(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) { toast('❌ Login failed: ' + error.message, false); return; }
+  if (data.user) {
+    const role = data.user.user_metadata.role;
+    toast('✅ Welcome back, ' + (data.user.user_metadata.name || 'User'), true);
+    // Route to correct dashboard
+    if (role === 'Admin') ds('admin', 'a-dash');
+    else if (role === 'Landlord') ds('landlord', 'l-overview');
+    else ds('tenant', 't-overview');
+  }
+};
+
+function saveState() { /* No longer needed for LocalStorage - data is now in Supabase */ }
+async function loadState() {
+  // Fetch real data from Supabase
+  const { data: listings } = await supabase.from('listings').select('*');
+  if (listings) state.properties = listings;
+  renderAllDynamic();
 }
 
 // ---- ALL ACTION HANDLERS (Globally Available) ----

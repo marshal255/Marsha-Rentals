@@ -9,6 +9,15 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap"
     rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- NEW: The Supabase Cloud Bridge -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Connecting Marsha Rentals to eqmcoxkscrzeslrbunkt.supabase.co
+  const supabaseUrl = 'https://eqmcoxkscrzeslrbunkt.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNveGtzY3J6ZXNscmJ1bmt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDA5NzQsImV4cCI6MjA5MDk3Njk3NH0.Mt36pAzMYY3vfcBA51XT4woO8no7EIOczJdy2zsBJ-w';
+  const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+</script>
   <style>
     *,
     *::before,

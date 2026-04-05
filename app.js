@@ -8,18 +8,14 @@ const state = {
 };
 
 // --- NEW AUTH ENGINE (Replacing Demo Accounts) ---
-window.platformSignup = async function(email, password, name, role) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name, role } }
+window.platformResetPassword = async function() {
+  const email = prompt("Enter your registered email to reset your password:");
+  if (!email) return;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
   });
-  if (error) { toast('❌ Error: ' + error.message, false); return; }
-  if (data.user) {
-    // Also save a record in our profiles table
-    await supabase.from('profiles').insert([{ id: data.user.id, name, role, email }]);
-    toast('✅ Registration successful! Please verify your email.', true);
-  }
+  if (error) { toast('❌ Error: ' + error.message, false); }
+  else { toast('📧 Reset link sent! Please check your email.', true); }
 };
 
 window.platformLogin = async function(email, password) {
@@ -28,10 +24,24 @@ window.platformLogin = async function(email, password) {
   if (data.user) {
     const role = data.user.user_metadata.role;
     toast('✅ Welcome back, ' + (data.user.user_metadata.name || 'User'), true);
-    // Route to correct dashboard
+    // Real-time Cloud Routing
     if (role === 'Admin') ds('admin', 'a-dash');
     else if (role === 'Landlord') ds('landlord', 'l-overview');
     else ds('tenant', 't-overview');
+  }
+};
+
+window.platformSignup = async function(email, password, name, role) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, role } }
+  });
+  if (error) { toast('❌ Error: ' + error.message, false); return; }
+  if (data.user) {
+    // Save to profiles table across the cloud bridge
+    await supabase.from('profiles').insert([{ id: data.user.id, name, role, email }]);
+    toast('✅ Welcome! Check your email to verify.', true);
   }
 };
 

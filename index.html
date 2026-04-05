@@ -2382,7 +2382,7 @@
                   36,000</span>
               </div>
             </div>
-            <button class="btn bp" style="width:100%;margin-bottom:7px;" onclick="loginAs('tenant')">Book now</button>
+            <button class="btn bp" style="width:100%;margin-bottom:7px;" onclick="gto('login')">Book now</button>
             <button class="btn bwa" style="width:100%;" onclick="waLandlord()">💬 WhatsApp landlord</button>
             <div class="lcard">
               <div class="lav" style="background:#E6F1FB;color:#0C447C;">JK</div>
@@ -2417,19 +2417,24 @@
       <div class="afwrap">
         <div class="aftitle">Create Account</div>
         <div class="afsub">Already have an account? <a onclick="gto('login')">Sign in here</a></div>
-        <div class="rtabs">
-          <button class="rtab active" id="rt-tenant" onclick="setRole('tenant')">Tenant</button>
-          <button class="rtab" id="rt-landlord" onclick="setRole('landlord')">Landlord</button>
-          <button class="rtab" id="rt-admin" onclick="setRole('admin')">Admin</button>
-        </div>
-        <div class="ff"><label class="ffl">Full Name</label><input type="text" placeholder="e.g. Grace Wanjiku"
-            class="r-val"></div>
-        <div class="ff"><label class="ffl">Email Address</label><input type="email" placeholder="you@example.com"></div>
-        <div class="ff"><label class="ffl">Phone / WhatsApp</label><input type="tel" placeholder="+254 700 000 000">
-        </div>
-        <div class="ff"><label class="ffl">Password</label><input type="password" placeholder="••••••••"></div>
-        <button class="btn bg-btn" style="width:100%;padding:12px;font-size:14px;margin-top:8px;"
-          onclick="registerUser()">Sign up securely</button>
+        <form
+          onsubmit="event.preventDefault(); window.platformSignup(this.email.value, this.password.value, this.fullname.value, this.role.value);"
+          style="margin-top:20px;">
+          <div class="ff"><label class="ffl">Full Name</label><input type="text" name="fullname"
+              placeholder="Grace Wanjiku" required></div>
+          <div class="ff"><label class="ffl">Email Address</label><input type="email" name="email"
+              placeholder="you@example.com" required></div>
+          <div class="ff"><label class="ffl">Join as</label>
+            <select name="role" style="width:100%;padding:12px;border:1px solid var(--g200);border-radius:var(--rsm);">
+              <option value="Tenant">Tenant</option>
+              <option value="Landlord">Landlord</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="ff"><label class="ffl">Password</label><input type="password" name="password"
+              placeholder="••••••••" required></div>
+          <button type="submit" class="btn bp" style="width:100%;padding:14px;font-size:15px;">Create account</button>
+        </form>
       </div>
     </div>
   </div>
@@ -2670,24 +2675,18 @@
         </div>
       </div>
       <div class="afwrap">
-        <div class="aftitle">Sign in</div>
-        <div class="afsub">Don't have an account? <a onclick="gto('register')">Register here</a></div>
-        <div class="ff"><label class="ffl">Email address</label><input type="email" placeholder="you@example.com"></div>
-        <div class="ff"><label class="ffl">Password</label><input type="password" placeholder="••••••••"></div>
-        <div style="text-align:right;margin:-4px 0 14px;font-size:13px;"><a
-            style="color:var(--blue);cursor:pointer;">Forgot password?</a></div>
-        <div class="divider"><span>Select Demo Role</span></div>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">
-          <button class="btn bp"
-            style="width:100%;padding:14px;font-size:15px;display:flex;justify-content:center;align-items:center;gap:10px;"
-            onclick="loginAs('tenant')">👤 Sign in as Tenant</button>
-          <button class="btn"
-            style="width:100%;padding:14px;font-size:15px;background:var(--green);border-color:var(--green);color:#fff;display:flex;justify-content:center;align-items:center;gap:10px;"
-            onclick="loginAs('landlord')">🏡 Sign in as Landlord</button>
-          <button class="btn"
-            style="width:100%;padding:14px;font-size:15px;background:#1a1a2e;color:#fff;display:flex;justify-content:center;align-items:center;gap:10px;"
-            onclick="loginAs('admin')">🛡️ Sign in as Admin</button>
-        </div>
+        <form onsubmit="event.preventDefault(); window.platformLogin(this.email.value, this.password.value);"
+          style="margin-top:20px;">
+          <div class="ff"><label class="ffl">Email address</label><input type="email" name="email"
+              placeholder="you@example.com" required></div>
+          <div class="ff"><label class="ffl">Password</label><input type="password" name="password"
+              placeholder="••••••••" required></div>
+          <div style="text-align:right;margin:-4px 0 14px;font-size:13px;"><a
+              style="color:var(--blue);cursor:pointer;" onclick="window.platformResetPassword()">Forgot password?</a></div>
+          <button type="submit" class="btn bp"
+            style="width:100%;padding:14px;font-size:15px;display:flex;justify-content:center;align-items:center;gap:10px;">Sign
+            in</button>
+        </form>
         <div class="aswitch" style="margin-top:20px;">New here? <a onclick="gto('register')">Create a free account</a>
         </div>
       </div>
@@ -4665,44 +4664,39 @@
       if (p === 'admin') setTimeout(initACharts, 100);
     }
     // ---- AUTH ----
-    function loginAs(role) {
-      const names = { tenant: 'Grace W.', landlord: 'James K.', admin: 'Admin' };
-      const cols = { tenant: '#185FA5', landlord: '#0F6E56', admin: '#E24B4A' };
-      document.getElementById('nav-auth').innerHTML = `
-    <div class="user-menu" style="position:relative;" tabindex="0" onblur="setTimeout(()=>this.querySelector('.um-dropdown').style.display='none', 200)">
-      <div style="display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="const d=this.nextElementSibling; d.style.display=d.style.display==='none'?'block':'none'">
-        <div style="width:30px;height:30px;border-radius:50%;background:${cols[role]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;">
-          ${names[role].charAt(0)}
-        </div>
-        <span style="font-size:13px;color:rgba(255,255,255,.85);">${names[role]}</span>
-      </div>
-      <div class="um-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:10px;background:#fff;border:1px solid var(--g200);border-radius:var(--rmd);box-shadow:0 4px 12px rgba(0,0,0,.15);width:150px;z-index:999;overflow:hidden;text-align:left;">
-        <div style="padding:10px 14px;font-size:13px;color:var(--g800);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="gto('${role}')">My Account</div>
-        <div style="padding:10px 14px;font-size:13px;color:var(--g800);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="gto('${role}'); setTimeout(()=>ds('${role}','${role.charAt(0)}-settings'), 50);">Settings</div>
-        <div style="height:1px;background:var(--g200);margin:4px 0;"></div>
-        <div style="padding:10px 14px;font-size:13px;color:var(--red);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="logout()">Logout</div>
-      </div>
-    </div>
-  `;
-      if (role === 'tenant') gto('tenant');
-      else if (role === 'landlord') gto('landlord');
-      else gto('admin');
-    }
-    function logout() {
+    // ---- AUTH CORE (Replacing Demo loginAs) ----
+    async function logout() {
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error('Error signing out:', error);
       document.getElementById('nav-auth').innerHTML = `<button class="btn bs bsm" onclick="gto('login')" style="color:#fff;border-color:rgba(255,255,255,.4);">Login</button><button class="btn bsm" style="background:#97C459;color:#173404;" onclick="gto('register')">Register</button>`;
       gto('home');
+      toast('🔒 You have signed out.', false);
     }
-    function registerUser() {
-      const activeTab = document.querySelector('.rtab.active');
-      const role = activeTab ? activeTab.id.replace('rt-', '') : 'tenant';
-      const name = document.querySelector('.r-val')?.value || 'New User';
-      toast(`✅ Welcome ${name}! Your ${role} account is ready.`, true);
-      loginAs(role);
-    }
-    function setRole(r) {
-      document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
-      document.getElementById('rt-' + r).classList.add('active');
-    }
+
+    // Auto-update Nav Menu when logged in/out (Supabase Auth State Listener)
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session.user) {
+        const u = session.user.user_metadata;
+        const names = { Admin: 'Admin', Landlord: u.name || 'Owner', Tenant: u.name || 'Resident' };
+        const cols = { Admin: '#E24B4A', Landlord: '#0F6E56', Tenant: '#185FA5' };
+        const role = u.role || 'Tenant';
+        document.getElementById('nav-auth').innerHTML = `
+          <div class="user-menu" style="position:relative;" tabindex="0" onblur="setTimeout(()=>this.querySelector('.um-dropdown').style.display='none', 200)">
+            <div style="display:flex;align-items:center;gap:7px;cursor:pointer;" onclick="const d=this.nextElementSibling; d.style.display=d.style.display==='none'?'block':'none'">
+              <div style="width:30px;height:30px;border-radius:50%;background:${cols[role] || '#185FA5'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;">
+                ${names[role].charAt(0)}
+              </div>
+              <span style="font-size:13px;color:rgba(255,255,255,.85);">${names[role]}</span>
+            </div>
+            <div class="um-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:10px;background:#fff;border:1px solid var(--g200);border-radius:var(--rmd);box-shadow:0 4px 12px rgba(0,0,0,.15);width:150px;z-index:999;overflow:hidden;text-align:left;">
+              <div style="padding:10px 14px;font-size:13px;color:var(--g800);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="const r='${role}'.toLowerCase(); gto(r);">My Account</div>
+              <div style="padding:10px 14px;font-size:13px;color:var(--g800);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="const r='${role}'.toLowerCase(); gto(r); setTimeout(()=>ds(r,r.charAt(0)+'-settings'), 50);">Settings</div>
+              <div style="height:1px;background:var(--g200);margin:4px 0;"></div>
+              <div style="padding:10px 14px;font-size:13px;color:var(--red);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''" onclick="logout()">Logout</div>
+            </div>
+          </div>`;
+      }
+    });
     // ---- DASHBOARD SECTION SWITCHING ----
     const DTITLES = {
       't-overview': 'Overview', 't-payments': 'Payments', 't-maint': 'Maintenance requests',

@@ -10,14 +10,14 @@
     rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<!-- NEW: The Supabase Cloud Bridge -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // Connecting Marsha Rentals to eqmcoxkscrzeslrbunkt.supabase.co
-  const supabaseUrl = 'https://eqmcoxkscrzeslrbunkt.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNveGtzY3J6ZXNscmJ1bmt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDA5NzQsImV4cCI6MjA5MDk3Njk3NH0.Mt36pAzMYY3vfcBA51XT4woO8no7EIOczJdy2zsBJ-w';
-  const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
-</script>
+  <!-- NEW: The Supabase Cloud Bridge -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Connecting Marsha Rentals to eqmcoxkscrzeslrbunkt.supabase.co
+    const supabaseUrl = 'https://eqmcoxkscrzeslrbunkt.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNveGtzY3J6ZXNscmJ1bmt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDA5NzQsImV4cCI6MjA5MDk3Njk3NH0.Mt36pAzMYY3vfcBA51XT4woO8no7EIOczJdy2zsBJ-w';
+    const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+  </script>
   <style>
     *,
     *::before,
@@ -3592,8 +3592,7 @@
                 </div>
               </div>
               <div class="dcard">
-                <div
-                  class="mheader"
+                <div class="mheader"
                   style="display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid var(--g100);">
                   <div class="uav" style="background:#E6F1FB;color:#0C447C;">GW</div>
                   <div style="flex:1;">
@@ -4018,7 +4017,8 @@
             </div>
             <div class="dcardf">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
-                <div class="dct" style="margin:0;">All transactions</div><button class="btn bs bsm" onclick="aExportCSV()">Export CSV</button>
+                <div class="dct" style="margin:0;">All transactions</div><button class="btn bs bsm"
+                  onclick="aExportCSV()">Export CSV</button>
               </div>
               <table class="dtbl">
                 <thead>
@@ -4264,7 +4264,8 @@
                 <div class="df"><label class="dfl">Default currency</label><select>
                     <option>KES — Kenyan Shilling</option>
                   </select></div>
-                <button class="btn br-btn" style="width:100%;margin-top:4px;" onclick="aSaveSettings(this)">Save settings</button>
+                <button class="btn br-btn" style="width:100%;margin-top:4px;" onclick="aSaveSettings(this)">Save
+                  settings</button>
                 <div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--g200);">
                   <div class="dct">Danger zone</div><button class="btn bxs"
                     style="width:100%;color:var(--red);border:1px solid var(--red);background:transparent;border-radius:var(--rsm);padding:9px;margin-top:6px;"
@@ -4290,7 +4291,8 @@
                   style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;">Site
                   Text</button>
                 <button class="cms-tab" onclick="switchCmsTab('amenities',this)"
-                  style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;">Listing Filters</button>
+                  style="padding:8px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;">Listing
+                  Filters</button>
               </div>
 
               <!-- CONTACT DETAILS PANEL -->
@@ -4358,7 +4360,8 @@
               <!-- AMENITIES PANEL -->
               <div id="cms-amenities" class="cms-panel" style="display:none;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
-                  <span style="font-size:13px;color:var(--g500);">Manage amenities and checkboxes shown in property filters.</span>
+                  <span style="font-size:13px;color:var(--g500);">Manage amenities and checkboxes shown in property
+                    filters.</span>
                   <button class="btn bp bsm" onclick="cmsOpenModal('amenities','add')">+ Add amenity</button>
                 </div>
                 <table class="dtbl" id="amenities-table">
@@ -5266,7 +5269,7 @@
     }
 
     // Global Action Handlers
-    window.aUserAction = function(mode, id) {
+    window.aUserAction = function (mode, id) {
       const u = platformDB.users.find(x => x.id === id);
       if (!u) return;
       if (mode === 'del') {
@@ -5281,7 +5284,7 @@
       }
     };
 
-    window.aPropAction = function(mode, id) {
+    window.aPropAction = function (mode, id) {
       const l = platformDB.listings.find(x => x.id === id);
       if (!l) return;
       if (mode === 'del') {

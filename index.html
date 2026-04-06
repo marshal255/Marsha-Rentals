@@ -3188,12 +3188,13 @@
             <div class="dcardf">
               <div class="dct">Update a request</div>
               <div class="dfrow">
-                <div class="df"><label class="dfl">Select request</label><select>
-                    <option>Pest control — Sunrise 3B</option>
-                    <option>Leaking tap — Sunrise 3B</option>
-                    <option>Gate lock — Lake View</option>
-                  </select></div>
-                <div class="df"><label class="dfl">New status</label><select>
+                <div class="df">
+                  <label class="dfl">Select request</label>
+                  <select id="l-maint-select">
+                    <option value="">- Select a request -</option>
+                  </select>
+                </div>
+                <div class="df"><label class="dfl">New status</label><select id="l-maint-new-status">
                     <option>In Progress</option>
                     <option>Resolved</option>
                     <option>Awaiting parts</option>
@@ -4216,7 +4217,7 @@
 
       const sessionResponse = await supabase.auth.getSession();
       const user = sessionResponse.data.session?.user;
-      if(!user) { toast('Please log in to submit requests.', false); return; }
+      if (!user) { toast('Please log in to submit requests.', false); return; }
 
       try {
         const payload = {
@@ -4445,10 +4446,10 @@
       if (!inp.files || !inp.files[0]) return;
       const f = inp.files[0];
       const sizeKB = Math.round(f.size / 1024);
-      
+
       const sessionResponse = await supabase.auth.getSession();
       const user = sessionResponse.data.session?.user;
-      if(!user) { toast('Please log in to upload documents.', false); return; }
+      if (!user) { toast('Please log in to upload documents.', false); return; }
 
       try {
         const payload = {
@@ -4818,6 +4819,16 @@
     window.onload = () => {
       if (typeof fetchSiteConfig === 'function') fetchSiteConfig();
       if (typeof fetchCMSConfig === 'function') fetchCMSConfig();
+
+      // Auto-refresh the dashboard if user is logged in
+      (async () => {
+        const sessionRes = await supabase.auth.getSession();
+        const user = sessionRes.data.session?.user;
+        if (user) {
+          if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        }
+      })();
+
       renderAllDynamic();
     };
   </script>

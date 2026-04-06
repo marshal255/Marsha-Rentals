@@ -1266,7 +1266,26 @@ window.lMaintRespond = function (issue, name) {
   );
 };
 
-window.lMaintUpdateNotify = function () { toast('✅ Updated and notified!', true); };
+window.lMaintUpdateNotify = async function () {
+    const mId = document.getElementById('l-maint-select')?.value;
+    const nS = document.getElementById('l-maint-new-status')?.value;
+    if(!mId) { toast('Please select a request to update.', false); return; }
+
+    try {
+        const { error } = await supabase.from('maintenance').update({ status: nS }).eq('id', mId);
+        if (error) throw error;
+
+        toast('✅ Request status updated to ' + nS, true);
+        
+        // Auto-refresh the landlord view
+        const { data: { session } } = await supabase.auth.getSession();
+        if(session && session.user) {
+            hydrateUserDashboards(session.user);
+        }
+    } catch (err) {
+        toast('❌ Update Error: ' + err.message, false);
+    }
+};
 window.lMaintWaNotify = function () { toast('Redirecting to WhatsApp...', true); };
 window.lSaveProfile = function () { toast('✅ Profile saved!', true); };
 
@@ -2190,20 +2209,26 @@ window.hydrateUserDashboards = async function(sessionUser) {
             const pT = document.getElementById('t-stat-rent');
             if(pT) pT.textContent = pendingPmt > 0 ? 'Due soon' : 'Up to date';
 
-            // 2. Render Tenant Maintenance List
+            // 2. Render Tenant Maintenance List (Premium Row Style)
             const tMaintList = document.getElementById('t-maint-list');
             if(tMaintList && maint) {
                 if(maint.length === 0) {
-                    tMaintList.innerHTML = `<div style="text-align:center;padding:40px;color:var(--g500);"><div style="font-size:32px;margin-bottom:10px;">🔧</div><div>No maintenance requests</div></div>`;
+                    tMaintList.innerHTML = `<div style="text-align:center;padding:80px;color:var(--g500);">
+                        <div style="font-size:48px;margin-bottom:15px;">🔧</div>
+                        <h3>No maintenance requests</h3>
+                        <p>Submit a request above if you need repairs.</p>
+                    </div>`;
                 } else {
                     tMaintList.innerHTML = maint.map(m => `
-                        <div class="rrow">
-                            <div class="ric" style="background:#FCEBEB;">🔧</div>
-                            <div style="flex:1;">
-                                <div style="font-size:13px;font-weight:500;">${m.issue || m.description}</div>
-                                <div style="font-size:11px;color:var(--g500);">${new Date(m.created_at).toLocaleDateString()} · ${m.type || 'General'}</div>
+                        <div class="rrow" style="background:#fff;padding:15px;border-radius:12px;margin-bottom:10px;border:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                            <div style="display:flex;gap:15px;align-items:center;">
+                                <div class="ric" style="background:#FCEBEB;width:40px;height:40px;">🔧</div>
+                                <div>
+                                    <div style="font-size:14px;font-weight:600;color:var(--g800);">${m.issue || m.description}</div>
+                                    <div style="font-size:11px;color:var(--g500);">${new Date(m.created_at).toLocaleDateString()} · ${m.type || 'Request'}</div>
+                                </div>
                             </div>
-                            <span class="badge ${m.status === 'Pending' ? 'bb' : (m.status === 'Resolved' ? 'bg' : 'ba')}">${m.status}</span>
+                            <span class="badge ${m.status === 'In Progress' ? 'ba' : (m.status === 'Resolved' ? 'bg' : 'bb')}">${m.status}</span>
                         </div>`).join('');
                 }
             }
@@ -2226,21 +2251,34 @@ window.hydrateUserDashboards = async function(sessionUser) {
                 }
             }
 
-            // 4. Render Tenant Documents List
-            const tDocBody = document.getElementById('t-doc-tbody');
+            // 4. Render Tenant Documents List (Premium Row Style)
+            const tDocBody = document.getElementById('t-doc-tbody'); // Note: if using table, we might need a div-list instead. 
+            // In index.html line 2869 it is a tbody. I will check if I should change it to a div list for better styling.
             if(tDocBody) {
                 const { data: docs } = await supabase.from('documents').select('*').eq('tenant_id', sessionUser.id);
-                if(!docs || docs.length === 0) {
-                    tDocBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--g500);">No documents found.</td></tr>`;
-                } else {
-                    tDocBody.innerHTML = docs.map(d => `
+                const tWrap = document.getElementById('t-doc-tbody-wrap'); 
+                if(tWrap && docs) {
+                   if(docs.length === 0) {
+                       tDocBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--g500);">
+                         <div style="font-size:40px;margin-bottom:10px;">📄</div>
+                         <h3>No documents yet</h3>
+                         <p>Your lease and receipts will appear here.</p>
+                       </td></tr>`;
+                   } else {
+                       // We can stick to table if styled well, or convert to rows. 
+                       // User screenshot looks like a table-less list, but table is fine if rows are styled.
+                       tDocBody.innerHTML = docs.map(d => `
                         <tr>
                             <td><div class="ric" style="background:#FCEBEB;">📄</div></td>
-                            <td><div style="font-weight:500;">${d.name}</div><div style="font-size:11px;color:var(--g500);">${d.category || 'Tenant Upload'}</div></td>
-                            <td>${d.size || 'FILE'} · ${new Date(d.created_at).toLocaleDateString()}</td>
-                            <td><span class="badge bb">${d.status}</span></td>
-                            <td><button class="btn bs bxs" onclick="docDownload('${d.id}')">View</button></td>
+                            <td>
+                                <div style="font-weight:600;font-size:14px;color:var(--g800);">${d.name}</div>
+                                <div style="font-size:11px;color:var(--g500);">${d.category || 'Tenant Upload'}</div>
+                            </td>
+                            <td style="font-size:12px;color:var(--g500);">${d.size || 'PDF'} · ${new Date(d.created_at).toLocaleDateString()}</td>
+                            <td><span class="badge ${d.status === 'Active' ? 'bg' : (d.status === 'Receipt' ? 'bb' : 'ba')}">${d.status}</span></td>
+                            <td><button class="btn bs bxs" style="padding:6px 12px;font-size:11px;" onclick="docDownload('${d.id}')">Download</button></td>
                         </tr>`).join('');
+                   }
                 }
             }
 
@@ -2318,6 +2356,35 @@ window.hydrateUserDashboards = async function(sessionUser) {
                         </div>`).join('');
                 }
             }
+
+            // 5. Render Landlord Maintenance Overviews & Selects
+            const lMaintList = document.getElementById('l-maint-list');
+            const lMaintSelect = document.getElementById('l-maint-select');
+            const { data: allMaint } = await supabase.from('maintenance').select('*');
+            
+            if(allMaint) {
+                // Populate the "Update a request" dropdown
+                if(lMaintSelect) {
+                    lMaintSelect.innerHTML = `<option value="">- Select a request -</option>` + allMaint.map(m => `
+                        <option value="${m.id}">${m.issue || m.description} — ${m.status}</option>`).join('');
+                }
+
+                // Populate the Table of requests
+                if(lMaintList) {
+                    if(allMaint.length === 0) {
+                        lMaintList.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--g500);">No maintenance requests found.</td></tr>`;
+                    } else {
+                        lMaintList.innerHTML = allMaint.map(m => `
+                            <tr>
+                                <td><div class="ric" style="background:#FCEBEB;">🔧</div></td>
+                                <td><div style="font-weight:500;">${m.issue}</div><div style="font-size:11px;color:var(--g500);">${new Date(m.created_at).toLocaleDateString()}</div></td>
+                                <td><span class="badge ${m.urgency === 'High' ? 'ba' : 'bb'}">${m.urgency}</span></td>
+                                <td><span class="badge ${m.status === 'Resolved' ? 'bg' : 'ba'}">${m.status}</span></td>
+                                <td><button class="btn bs bxs" onclick="viewMaint('${m.id}')">View</button></td>
+                            </tr>`).join('');
+                    }
+                }
+            }
         }
     } catch (err) {
         console.warn('Dashboard Hydration Pipeline Error:', err);
@@ -2328,6 +2395,16 @@ window.hydrateUserDashboards = async function(sessionUser) {
 supabase.auth.onAuthStateChange((event, session) => {
     if(session && session.user) {
         // Fire asynchronously to avoid blocking UI thread during auth transitions
-        setTimeout(() => hydrateUserDashboards(session.user), 800);
+        console.log('Auth State Change:', event, session.user.email);
+        setTimeout(() => hydrateUserDashboards(session.user), 1500);
     }
 });
+
+// Initial load check
+(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session && session.user) {
+        console.log('Initial Session Found:', session.user.email);
+        hydrateUserDashboards(session.user);
+    }
+})();

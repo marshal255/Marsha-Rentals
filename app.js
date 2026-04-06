@@ -283,12 +283,12 @@ function renderLTenants(props) {
                     <tr>
                         <td>
                             <div style="font-weight:600;">Grace Wanjiku</div>
-                            <div style="font-size:11px;color:var(--g500);">+254 700 000 000</div>
+                            <div style="font-size:11px;color:var(--g500);">+254 753 348 298</div>
                         </td>
                         <td>${t.title}</td>
                         <td><span class="badge bg">Paid</span></td>
                         <td style="text-align:right;">
-                            <button class="btn bwa bxs" onclick="waTenant('+254700000000', 'Grace')">WA</button>
+                            <button class="btn bwa bxs" onclick="waTenant('+254753348298', 'Grace')">WA</button>
                             <button class="btn bs bxs" onclick="lViewTenant('Grace')">View</button>
                         </td>
                     </tr>
@@ -1022,7 +1022,7 @@ window.lSendReminder = function (type) {
   const sel = p.querySelector('select')?.value || 'Tenant';
   const msg = p.querySelector('textarea')?.value || '';
   if (type === 'wa') {
-    const waUrl = 'https://wa.me/254700000000?text=' + encodeURIComponent(msg);
+    const waUrl = 'https://wa.me/254753348298?text=' + encodeURIComponent(msg);
     showModal('Send Reminder via WhatsApp', `<p>Sending reminder to <strong>${sel}</strong>.</p>`,
       `<button class='btn bwa' style='flex:1;' onclick='window.open("${waUrl}", "_blank"); cmsCloseModal();'>Open WhatsApp</button><button class='btn bs' style='flex:1;' onclick='cmsCloseModal()'>Cancel</button>`
     );
@@ -1254,7 +1254,7 @@ window.lMsgSendWa = function () {
   const ta = document.querySelector('.mcomp textarea');
   const txt = ta ? ta.value : '';
   if (txt.trim() === '') { toast('Please type a message first.', false); return; }
-  const waUrl = 'https://wa.me/254700000000?text=' + encodeURIComponent(txt);
+  const waUrl = 'https://wa.me/254753348298?text=' + encodeURIComponent(txt);
   showModal('Send via WhatsApp', `<p>This will open WhatsApp with your message pre-filled.</p>`,
     `<button class='btn bwa' style='flex:1;' onclick='window.open("${waUrl}", "_blank"); cmsCloseModal();'>Open WhatsApp</button><button class='btn bs' style='flex:1;' onclick='cmsCloseModal()'>Cancel</button>`
   );
@@ -1586,7 +1586,7 @@ window.submitContact = async function(btn) {
 };
 
 window.waContact = function() {
-  const num = '254700000000';
+  const num = '254753348298';
   const msg = encodeURIComponent('Hello Marsha Rentals, I would like to make an enquiry regarding your listings.');
   window.open('https://wa.me/' + num + '?text=' + msg, '_blank');
 };
@@ -1902,7 +1902,7 @@ window.lViewTenant = function(name) {
     showModal('Tenant Details', `
         <div style='text-align:left;line-height:2;font-size:14px;color:var(--g500);'>
             <p><strong>Name:</strong> ${name || 'Grace Wanjiku'}</p>
-            <p><strong>Contact:</strong> +254 700 000 000</p>
+            <p><strong>Contact:</strong> +254 753 348 298</p>
             <p><strong>Joined:</strong> ${new Date().toLocaleDateString()}</p>
             <hr style="border:0;border-top:1px solid #eee;margin:10px 0;">
             <p style="font-size:12px;">This profile is verified and active.</p>
@@ -1962,7 +1962,7 @@ window.fetchSiteConfig = async function() {
             
             if(nInp) nInp.value = data.platform_name || 'Marshal Rentals';
             if(eInp) eInp.value = data.admin_email || 'admin@marshalrentals.co.ke';
-            if(wInp) wInp.value = data.whatsapp_number || '+254 700 000 000';
+            if(wInp) wInp.value = data.whatsapp_number || '+254 753 348 298';
             const aInp = document.getElementById('a-cfg-address');
             if(aInp) aInp.value = officeAddr;
 
@@ -1986,7 +1986,7 @@ window.fetchSiteConfig = async function() {
                 if (document.getElementById('cms-contact-address')) document.getElementById('cms-contact-address').textContent = officeAddr;
             }
 
-            window.SITE_WHATSAPP = data.whatsapp_number || '+254 700 000 000';
+            window.SITE_WHATSAPP = data.whatsapp_number || '+254 753 348 298';
             window.SITE_EMAIL = data.admin_email || 'admin@marshalrentals.co.ke';
         }
     } catch (err) {
@@ -2180,39 +2180,107 @@ window.hydrateUserDashboards = async function(sessionUser) {
         
         if(role === 'tenant') {
             // 1. Hydrate Tenant Stats
-            const { data: maint } = await supabase.from('maintenance').select('status').eq('tenant_id', sessionUser.id);
+            const { data: maint } = await supabase.from('maintenance').select('*').eq('tenant_id', sessionUser.id);
             const mCount = maint ? maint.filter(m => m.status === 'Pending').length : 0;
             const mT = document.getElementById('t-stat-maint');
             if(mT) mT.textContent = mCount > 0 ? mCount + ' Active' : 'None';
 
-            const { data: pmts } = await supabase.from('payments').select('status').eq('tenant_id', sessionUser.id);
+            const { data: pmts } = await supabase.from('payments').select('*').eq('tenant_id', sessionUser.id);
             const pendingPmt = pmts ? pmts.filter(p => p.status === 'Pending').length : 0;
             const pT = document.getElementById('t-stat-rent');
             if(pT) pT.textContent = pendingPmt > 0 ? 'Due soon' : 'Up to date';
 
-            // Just a placeholder to remove the dash if no lease is found
-            const leaseRent = document.getElementById('t-lease-rent');
-            if(leaseRent && leaseRent.textContent === '-') leaseRent.textContent = 'KSh 0';
+            // 2. Render Tenant Maintenance List
+            const tMaintList = document.getElementById('t-maint-list');
+            if(tMaintList && maint) {
+                if(maint.length === 0) {
+                    tMaintList.innerHTML = `<div style="text-align:center;padding:40px;color:var(--g500);"><div style="font-size:32px;margin-bottom:10px;">🔧</div><div>No maintenance requests</div></div>`;
+                } else {
+                    tMaintList.innerHTML = maint.map(m => `
+                        <div class="rrow">
+                            <div class="ric" style="background:#FCEBEB;">🔧</div>
+                            <div style="flex:1;">
+                                <div style="font-size:13px;font-weight:500;">${m.issue || m.description}</div>
+                                <div style="font-size:11px;color:var(--g500);">${new Date(m.created_at).toLocaleDateString()} · ${m.type || 'General'}</div>
+                            </div>
+                            <span class="badge ${m.status === 'Pending' ? 'bb' : (m.status === 'Resolved' ? 'bg' : 'ba')}">${m.status}</span>
+                        </div>`).join('');
+                }
+            }
 
+            // 3. Render Tenant Payment History
+            const tPmtList = document.getElementById('t-payment-history-list');
+            if(tPmtList && pmts) {
+                if(pmts.length === 0) {
+                    tPmtList.innerHTML = `<div style="text-align:center;padding:40px;color:var(--g500);"><div style="font-size:32px;margin-bottom:10px;">💳</div><div>No payment records yet</div></div>`;
+                } else {
+                    tPmtList.innerHTML = pmts.map(p => `
+                        <div class="rrow">
+                            <div class="ric" style="background:${p.status === 'Paid' ? '#E1F5EE' : '#FCEBEB'};">${p.status === 'Paid' ? '💰' : '💳'}</div>
+                            <div style="flex:1;">
+                                <div style="font-size:13px;font-weight:500;">KSh ${(p.amount || 0).toLocaleString()}</div>
+                                <div style="font-size:11px;color:var(--g500);">${new Date(p.created_at).toLocaleDateString()} · ${p.method || 'M-Pesa'}</div>
+                            </div>
+                            <span class="badge ${p.status === 'Paid' ? 'bg' : 'ba'}">${p.status}</span>
+                        </div>`).join('');
+                }
+            }
+
+            // 4. Render Tenant Documents List
+            const tDocBody = document.getElementById('t-doc-tbody');
+            if(tDocBody) {
+                const { data: docs } = await supabase.from('documents').select('*').eq('tenant_id', sessionUser.id);
+                if(!docs || docs.length === 0) {
+                    tDocBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--g500);">No documents found.</td></tr>`;
+                } else {
+                    tDocBody.innerHTML = docs.map(d => `
+                        <tr>
+                            <td><div class="ric" style="background:#FCEBEB;">📄</div></td>
+                            <td><div style="font-weight:500;">${d.name}</div><div style="font-size:11px;color:var(--g500);">${d.category || 'Tenant Upload'}</div></td>
+                            <td>${d.size || 'FILE'} · ${new Date(d.created_at).toLocaleDateString()}</td>
+                            <td><span class="badge bb">${d.status}</span></td>
+                            <td><button class="btn bs bxs" onclick="docDownload('${d.id}')">View</button></td>
+                        </tr>`).join('');
+                }
+            }
+
+            // 5. Render Tenant Saved Properties (Pulling real listings for discover)
+            const tSavedList = document.getElementById('t-saved-list');
+            if(tSavedList) {
+                const { data: savedProps } = await supabase.from('listings').select('*').limit(3);
+                if(savedProps && savedProps.length > 0) {
+                    const tSavedCountText = document.getElementById('t-saved-count-text');
+                    if(tSavedCountText) tSavedCountText.textContent = `Saved properties (${savedProps.length})`;
+                    
+                    tSavedList.innerHTML = savedProps.map(p => `
+                        <div class="pcard" onclick="viewPropertyDetails('${p.id}')">
+                            <div class="pthumb" style="${p.image_url ? `background-image: url('${p.image_url}'); background-size: cover;` : ''}">
+                                <div class="pavail"><span class="badge ${p.status === 'Available' ? 'bg' : (p.status === 'Occupied' ? 'ba' : 'br')}">${p.status}</span></div>
+                            </div>
+                            <div class="pinfo">
+                                <div class="pprice">KSh ${(p.price || 0).toLocaleString()}/mo</div>
+                                <div class="ploc">📍 ${p.location}</div>
+                                <button class="btn bp bsm" style="width:100%;margin-top:7px;">View</button>
+                            </div>
+                        </div>`).join('');
+                }
+            }
         } else if(role === 'landlord') {
             // 2. Hydrate Landlord Stats
-            const { data: props } = await supabase.from('listings').select('id, status, price, profiles!inner(name)'); // Note: simplistic fetch, could error if RLS or format differs
-            const { data: lprops, error: lpErr } = await supabase.from('listings').select('*').eq('landlord_id', sessionUser.id);
-            
-            // Standard fetch fallback if the exact landlord_id relationship is undocumented
+            const { data: lprops } = await supabase.from('listings').select('*').eq('landlord_id', sessionUser.id);
             const myProps = lprops || [];
             
             const eProps = document.getElementById('l-stat-props');
             if(eProps) eProps.textContent = myProps.length;
 
             const { data: mData } = await supabase.from('maintenance').select('*');
-            const myMaint = (mData || []).length; // Simplify for demo: just show all active issues or filter by property later
+            const myMaintCount = (mData || []).length; 
             const eMaint = document.getElementById('l-stat-maint');
-            if(eMaint) eMaint.textContent = myMaint;
+            if(eMaint) eMaint.textContent = myMaintCount + ' Active';
 
             const eRev = document.getElementById('l-stat-rev');
             if(eRev) {
-                const totalRev = myProps.reduce((sum, p) => sum + (parseInt(String(p.price || 0).replace(/[^0-9]/g, '')) || 0), 0);
+                const totalRev = myProps.reduce((sum, p) => sum + (p.price || 0), 0);
                 eRev.textContent = 'KSh ' + totalRev.toLocaleString();
             }
 
@@ -2220,6 +2288,35 @@ window.hydrateUserDashboards = async function(sessionUser) {
             if(eTenants) {
                 const occ = myProps.filter(p => p.status === 'Occupied').length;
                 eTenants.textContent = occ;
+            }
+
+            // 3. Render Landlord Property List
+            const lGrid = document.getElementById('l-props-list');
+            if(lGrid && myProps) {
+                const lpCountText = document.getElementById('l-props-count-text');
+                if(lpCountText) lpCountText.textContent = `My properties (${myProps.length})`;
+                
+                if(myProps.length === 0) {
+                    lGrid.innerHTML = `<div style="text-align:center;padding:80px;color:var(--g500);background:#fff;border-radius:var(--rmd);border:1.5px dashed var(--g200);"><div style="font-size:48px;margin-bottom:15px;">🏗️</div><h3>No properties yet</h3><p>Assign your first rental property.</p><button class="btn bg-btn" onclick="lAddProperty()">+ Add my first property</button></div>`;
+                } else {
+                    lGrid.innerHTML = myProps.map(p => `
+                        <div class="rrow" style="background:#fff;padding:15px;border-radius:10px;margin-bottom:10px;border:1px solid var(--g200);display:flex;justify-content:space-between;align-items:center;">
+                            <div style="display:flex;gap:15px;align-items:center;">
+                                <div style="width:50px;height:50px;border-radius:8px;background:#f0f0f0 url('${p.image_url}') center/cover;"></div>
+                                <div>
+                                    <div style="font-weight:600;">${p.title || p.name}</div>
+                                    <div style="font-size:12px;color:var(--g500);">📍 ${p.location} · <span class="badge ${p.status === 'Available' ? 'bg' : (p.status === 'Occupied' ? 'ba' : 'br')}" style="font-size:9px;padding:2px 6px;">${p.status}</span></div>
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:700;color:var(--blue);">KSh ${(p.price || 0).toLocaleString()}</div>
+                                <div style="display:flex;gap:5px;margin-top:5px;">
+                                    <button class="btn bs bxs" onclick="viewPropertyDetails('${p.id}')">View</button>
+                                    <button class="btn bs bxs" onclick="lEditProperty('${p.id}')">Edit</button>
+                                </div>
+                            </div>
+                        </div>`).join('');
+                }
             }
         }
     } catch (err) {

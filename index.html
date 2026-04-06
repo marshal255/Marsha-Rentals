@@ -2188,7 +2188,7 @@
             onclick="gto('blog')">Blog</a>
         </div>
         <div class="fcol">
-          <h4>Contact</h4><a id="cms-footer-phone">📞 +254 700 000 000</a><a id="cms-footer-email">✉️
+          <h4>Contact</h4><a id="cms-footer-phone">📞 +254 753 348 298</a><a id="cms-footer-email">✉️
             info@marshalrentals.co.ke</a><a id="cms-footer-address">📍 Naivasha CBD</a>
         </div>
       </div>
@@ -2460,7 +2460,7 @@
             <div class="ciicon" style="background:#FCEBEB;">📞</div>
             <div>
               <div style="font-size:11px;color:var(--g500);">Phone</div>
-              <div id="cms-contact-phone" style="font-size:14px;font-weight:600;color:var(--g800);">+254 700 000 000
+              <div id="cms-contact-phone" style="font-size:14px;font-weight:600;color:var(--g800);">+254 753 348 298
               </div>
             </div>
           </div>
@@ -2873,36 +2873,15 @@
 
           <div class="dsec" id="sec-t-saved">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-              <div style="font-size:14px;font-weight:600;">Saved properties (4)</div><button class="btn bp bsm"
-                onclick="gto('listings')">Browse more</button>
+              <div style="font-size:14px;font-weight:600;" id="t-saved-count-text">Saved properties (0)</div>
+              <button class="btn bp bsm" onclick="gto('listings')">Browse more</button>
             </div>
-            <div class="pgrid">
-              <div class="pcard" onclick="gto('detail')">
-                <div class="pthumb pt1">🏢<div class="pavail"><span class="badge bg">Available</span></div>
-                </div>
-                <div class="pinfo">
-                  <div class="pprice">KSh 15,000/mo</div>
-                  <div class="ploc">📍 Nakuru CBD · 1BR</div><button class="btn bp bsm"
-                    style="width:100%;margin-top:7px;">View</button>
-                </div>
-              </div>
-              <div class="pcard" onclick="gto('detail')">
-                <div class="pthumb pt2">🏡<div class="pavail"><span class="badge bg">Available</span></div>
-                </div>
-                <div class="pinfo">
-                  <div class="pprice">KSh 9,000/mo</div>
-                  <div class="ploc">📍 Kongoni · Bedsitter</div><button class="btn bp bsm"
-                    style="width:100%;margin-top:7px;">View</button>
-                </div>
-              </div>
-              <div class="pcard">
-                <div class="pthumb pt4">🏘️<div class="pavail"><span class="badge ba">Reserved</span></div>
-                </div>
-                <div class="pinfo">
-                  <div class="pprice">KSh 35,000/mo</div>
-                  <div class="ploc">📍 Hell's Gate · 3BR</div><button class="btn bs bsm"
-                    style="width:100%;margin-top:7px;">View</button>
-                </div>
+            <div class="pgrid" id="t-saved-list">
+              <!-- Real Supabase Saved/Featured Properties will be rendered here -->
+              <div style="text-align:center;padding:60px;grid-column:1/-1;color:var(--g500);">
+                <div style="font-size:40px;margin-bottom:15px;">💾</div>
+                <h3>No saved properties found</h3>
+                <p>Browse listings and click 'Save' to see them here.</p>
               </div>
             </div>
           </div>
@@ -3740,7 +3719,7 @@
                 <div class="df"><label class="dfl">Support Email</label><input type="email" id="cms-cfg-email"
                     value="support@marshalrentals.co.ke"></div>
                 <div class="df"><label class="dfl">Phone Number</label><input type="tel" id="cms-cfg-phone"
-                    value="+254 700 000 000"></div>
+                    value="+254 753 348 298"></div>
                 <div class="df"><label class="dfl">Office Address</label><input type="text" id="cms-cfg-address"
                     value="Nairobi, Kenya"></div>
 
@@ -3828,7 +3807,7 @@
                 <div class="df"><label class="dfl">Admin email</label><input type="email" id="a-cfg-email"
                     value="admin@marshalrentals.co.ke"></div>
                 <div class="df"><label class="dfl">WhatsApp business number</label><input type="tel" id="a-cfg-whatsapp"
-                    value="+254 700 000 000"></div>
+                    value="+254 753 348 298"></div>
                 <div class="df"><label class="dfl">Office address</label><input type="text" id="a-cfg-address"
                     value="Naivasha CBD, Nakuru County, Kenya"></div>
                 <div class="df"><label class="dfl">Default currency</label><select id="a-cfg-currency">
@@ -4162,7 +4141,7 @@
 
     // ---- WHATSAPP ----
     function waLandlord() {
-      const num = '254700000000';
+      const num = '254753348298';
       const msg = encodeURIComponent('Hello, I am interested in the property listed on Marshal Rentals. Could you please share more details?');
       const waUrl = `https://wa.me/${num}?text=${msg}`;
       const btns = `
@@ -4175,10 +4154,10 @@
       showModal('Call Landlord',
         '<div style="text-align:center;padding:20px 0;">' +
         '<div style="font-size:48px;margin-bottom:12px;">📞</div>' +
-        '<div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">+254 700 000 000</div>' +
+        '<div style="font-size:22px;font-weight:700;color:var(--blue);margin-bottom:6px;">+254 753 348 298</div>' +
         '<div style="color:var(--g500);font-size:13px;">James Kamau · Verified Landlord · ⭐ 4.8</div>' +
         '<div style="margin-top:14px;background:var(--g50);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--g500);">Available Mon–Sat, 8am–6pm</div></div>',
-        '<a href="tel:+254700000000" class="btn bp" style="flex:1;text-align:center;">📞 Call now</a>' +
+        '<a href="tel:+254753348298" class="btn bp" style="flex:1;text-align:center;">📞 Call now</a>' +
         '<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>'
       );
     }
@@ -4228,19 +4207,37 @@
     }
 
     // ---- MAINTENANCE ----
-    function submitMaint() {
+    async function submitMaint() {
       const sel = document.querySelectorAll('#sec-t-maint select');
       const txt = document.querySelector('#sec-t-maint textarea')?.value?.trim();
       if (!txt) { toast('Please describe the issue before submitting.', false); return; }
       const type = sel[0]?.value || 'General';
       const urgency = sel[1]?.value || 'Low';
-      const tbody = document.getElementById('maint-requests-card');
-      const row = document.createElement('div');
-      row.className = 'rrow';
-      row.innerHTML = `<div class="ric" style="background:#E6F1FB;">🔧</div><div style="flex:1;"><div style="font-size:13px;font-weight:500;">${type} — submitted</div><div style="font-size:11px;color:var(--g500);">${new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })} · ${urgency}</div></div><span class="badge bb">Pending</span>`;
-      if (tbody) tbody.appendChild(row);
-      document.querySelector('#sec-t-maint textarea').value = '';
-      toast('✅ Maintenance request submitted!', true);
+
+      const sessionResponse = await supabase.auth.getSession();
+      const user = sessionResponse.data.session?.user;
+      if(!user) { toast('Please log in to submit requests.', false); return; }
+
+      try {
+        const payload = {
+          tenant_id: user.id,
+          issue: type,
+          description: txt,
+          urgency: urgency,
+          status: 'Pending',
+          type: type,
+          created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase.from('maintenance').insert(payload);
+        if (error) throw error;
+
+        toast('✅ Maintenance request submitted successfully!', true);
+        document.querySelector('#sec-t-maint textarea').value = '';
+        if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+      } catch (err) {
+        toast('❌ Submit Error: ' + err.message, false);
+      }
     }
     function attachPhoto() {
       document.getElementById('maint-photo-inp')?.click();
@@ -4444,20 +4441,34 @@
 
     // ---- TENANT UPLOAD ----
     function tDocUpload() { document.getElementById('t-doc-inp')?.click(); }
-    function tDocFileSelected(inp) {
+    async function tDocFileSelected(inp) {
       if (!inp.files || !inp.files[0]) return;
       const f = inp.files[0];
       const sizeKB = Math.round(f.size / 1024);
-      const doc = {
-        id: docNextId++, icon: '📎', name: f.name, size: `${f.type.split('/')[1]?.toUpperCase() || 'FILE'} · ${sizeKB} KB`,
-        date: new Date().toLocaleDateString('en-KE', { month: 'short', year: 'numeric' }),
-        type: 'Pending', tenant: window.CURRENT_USER_NAME || 'Tenant', tenantUnit: 'My Unit'
-      };
-      docDB.push(doc);
-      renderTDocs();
-      renderLDocs();
-      inp.value = '';
-      toast('📎 "' + f.name + '" uploaded and pending review.', true);
+      
+      const sessionResponse = await supabase.auth.getSession();
+      const user = sessionResponse.data.session?.user;
+      if(!user) { toast('Please log in to upload documents.', false); return; }
+
+      try {
+        const payload = {
+          tenant_id: user.id,
+          name: f.name,
+          size: `${f.type.split('/')[1]?.toUpperCase() || 'FILE'} · ${sizeKB} KB`,
+          status: 'Pending',
+          category: 'Tenant Upload',
+          created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase.from('documents').insert(payload);
+        if (error) throw error;
+
+        toast('📎 Document "' + f.name + '" uploaded and pending review.', true);
+        if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        inp.value = '';
+      } catch (err) {
+        toast('❌ Upload Error: ' + err.message, false);
+      }
     }
 
     // ---- LANDLORD UPLOAD ----

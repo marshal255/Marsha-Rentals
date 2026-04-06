@@ -10,13 +10,27 @@
     rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-  <!-- NEW: The Supabase Cloud Bridge -->
+  <!-- NEW: The Supabase Cloud Bridge library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Connecting Marsha Rentals to eqmcoxkscrzeslrbunkt.supabase.co
+    // Global Supabase Engine Bridge
     const supabaseUrl = 'https://eqmcoxkscrzeslrbunkt.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxbWNveGtzY3J6ZXNscmJ1bmt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDA5NzQsImV4cCI6MjA5MDk3Njk3NH0.Mt36pAzMYY3vfcBA51XT4woO8no7EIOczJdy2zsBJ-w';
-    const supabase = supabasejs.createClient(supabaseUrl, supabaseKey);
+
+    // Initialize Supabase (Checking both possible v2 global names)
+    try {
+      const lib = window.supabasejs || window.supabase;
+      if (!lib) throw new Error('Supabase Library Not Loaded - Please check your internet connection.');
+      window.supabase = lib.createClient(supabaseUrl, supabaseKey);
+      console.log('✅ Supabase initialized successfully');
+    } catch (e) {
+      console.error('❌ Supabase Init Error:', e.message);
+      // Wait for DOM to show alert
+      window.addEventListener('DOMContentLoaded', () => { toast('🚫 Connection Error: Could not reach the cloud database.', false); });
+    }
+
+    // Global App State Bridge
+    window.PLATFORM_STATE = { contacts: [], bookings: [], users: [], properties: [], maintenance: [] };
   </script>
   <style>
     *,
@@ -2035,8 +2049,9 @@
       <div
         style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#97C459;margin-bottom:14px;font-weight:500;">
         Naivasha · Nakuru · Rift Valley</div>
-      <h1>Find Your <em>Perfect Home</em><br>in Kenya's Rift Valley</h1>
-      <p>Browse verified listings. Book securely. Move in with confidence.</p>
+      <h1 class="cms-hero-headline" style="max-width:800px;margin:15px auto;">Find Your <em>Perfect Home</em><br>in
+        Kenya's Rift Valley</h1>
+      <p class="cms-hero-sub">Browse verified listings. Book securely. Move in with confidence.</p>
       <div class="sbox">
         <select>
           <option value="">📍 Location</option>
@@ -2065,15 +2080,15 @@
       </div>
       <div class="hstats">
         <div class="hstat">
-          <div class="hstat-n">300+</div>
+          <div class="hstat-n" id="hstat-listings">0</div>
           <div class="hstat-l">Verified listings</div>
         </div>
         <div class="hstat">
-          <div class="hstat-n">150+</div>
+          <div class="hstat-n" id="hstat-tenants">0</div>
           <div class="hstat-l">Happy tenants</div>
         </div>
         <div class="hstat">
-          <div class="hstat-n">36+</div>
+          <div class="hstat-n" id="hstat-landlords">0</div>
           <div class="hstat-l">Landlords</div>
         </div>
       </div>
@@ -2081,56 +2096,10 @@
     <div class="hsec">
       <div class="stitle">Featured listings</div>
       <div class="ssub">Hand-picked properties available right now across the region.</div>
-      <div class="pgrid">
-        <div class="pcard" onclick="gto('detail')">
-          <div class="pthumb pt1">🏢<div class="pavail"><span class="badge bg">Available</span></div>
-          </div>
-          <div class="pinfo">
-            <div class="pprice">KSh 12,000<span style="font-size:12px;font-weight:400;color:var(--g500)">/mo</span>
-            </div>
-            <div class="ploc">📍 Naivasha CBD</div>
-            <div class="ptags"><span class="badge bb">1 BR</span><span class="badge bt">WiFi</span><span
-                class="badge bt">Water</span></div>
-            <div class="pdesc">Modern apartment near town centre, secure compound with CCTV.</div><button
-              class="btn bp bsm" style="width:100%">View details</button>
-          </div>
-        </div>
-        <div class="pcard" onclick="gto('detail')">
-          <div class="pthumb pt2">🏡<div class="pavail"><span class="badge bg">Available</span></div>
-          </div>
-          <div class="pinfo">
-            <div class="pprice">KSh 8,500<span style="font-size:12px;font-weight:400;color:var(--g500)">/mo</span></div>
-            <div class="ploc">📍 Kongoni Area</div>
-            <div class="ptags"><span class="badge bgr">Bedsitter</span><span class="badge bt">Security</span></div>
-            <div class="pdesc">Cosy bedsitter in quiet neighbourhood. Parking available.</div><button class="btn bp bsm"
-              style="width:100%">View details</button>
-          </div>
-        </div>
-        <div class="pcard" onclick="gto('detail')">
-          <div class="pthumb pt4">🏘️<div class="pavail"><span class="badge bg">Available</span></div>
-          </div>
-          <div class="pinfo">
-            <div class="pprice">KSh 45,000<span style="font-size:12px;font-weight:400;color:var(--g500)">/mo</span>
-            </div>
-            <div class="ploc">📍 Hell's Gate Estate</div>
-            <div class="ptags"><span class="badge bb">3 BR</span><span class="badge bt">Garden</span><span
-                class="badge bt">DSTV</span></div>
-            <div class="pdesc">Executive villa with lake views in gated community.</div><button class="btn bp bsm"
-              style="width:100%">View details</button>
-          </div>
-        </div>
-        <div class="pcard">
-          <div class="pthumb pt5">🏠<div class="pavail"><span class="badge br">Taken</span></div>
-          </div>
-          <div class="pinfo">
-            <div class="pprice">KSh 22,000<span style="font-size:12px;font-weight:400;color:var(--g500)">/mo</span>
-            </div>
-            <div class="ploc">📍 Nakuru Town</div>
-            <div class="ptags"><span class="badge bb">2 BR</span><span class="badge bt">WiFi</span><span
-                class="badge bt">Parking</span></div>
-            <div class="pdesc">Spacious 2-bedroom near Nakuru CBD. Fully furnished.</div><button class="btn bs bsm"
-              style="width:100%" disabled>Unavailable</button>
-          </div>
+      <div class="pgrid" id="pgrid-home">
+        <!-- Live Properties Injected Here via app.js -->
+        <div style="grid-column:1/-1;text-align:center;padding:100px 0;">
+          <p style="color:var(--g500);">Loading live properties...</p>
         </div>
       </div>
       <div style="text-align:center;margin-top:24px;"><button class="btn bs" onclick="gto('listings')">Browse all
@@ -2219,7 +2188,8 @@
             onclick="gto('blog')">Blog</a>
         </div>
         <div class="fcol">
-          <h4>Contact</h4><a>📞 +254 700 000 000</a><a>✉️ info@marshalrentals.co.ke</a><a>📍 Naivasha CBD</a>
+          <h4>Contact</h4><a id="cms-footer-phone">📞 +254 700 000 000</a><a id="cms-footer-email">✉️
+            info@marshalrentals.co.ke</a><a id="cms-footer-address">📍 Naivasha CBD</a>
         </div>
       </div>
       <div class="fbot"><span>© 2025 Marshal Rentals. All rights reserved.</span><span>Naivasha · Nakuru County ·
@@ -2231,23 +2201,25 @@
   <div id="page-listings" class="page">
     <div class="psrbar">
       <div class="psrinner">
-        <input type="text" placeholder="🔍 Search by location, name...">
-        <select>
-          <option>All areas</option>
+        <input type="text" id="search-keyword" placeholder="🔍 Search by location, name..."
+          onkeyup="if(event.key === 'Enter') runPropertySearch()">
+        <select id="search-area" onchange="runPropertySearch()">
+          <option value="">All areas</option>
           <option>Naivasha CBD</option>
           <option>Nakuru Town</option>
           <option>Kongoni</option>
           <option>Hell's Gate</option>
           <option>Maai Mahiu</option>
+          <option>Kisumu</option>
         </select>
-        <select>
-          <option>All types</option>
+        <select id="search-type" onchange="runPropertySearch()">
+          <option value="">All types</option>
           <option>Bedsitter</option>
           <option>1 Bedroom</option>
           <option>2 Bedrooms</option>
           <option>3 Bedrooms</option>
         </select>
-        <button class="btn bp bsm">Search</button>
+        <button class="btn bp bsm" onclick="runPropertySearch()">Search</button>
       </div>
     </div>
     <div class="llayout">
@@ -2282,8 +2254,10 @@
       </aside>
       <div>
         <div class="sbar" style="border: 1px solid var(--g200); padding: 8px 12px; border-radius: var(--rmd);">
-          <div class="sbar-l" style="font-size:14px;"><span style="font-weight:600;color:var(--g800);">24
-              properties</span> <span style="color:var(--g500);">found</span></div>
+          <div class="sbar-l" style="font-size:14px;"><span style="font-weight:600;color:var(--g800);"
+              id="prop-count-header">0
+            </span> <span style="color:var(--g500);">properties</span> <span style="color:var(--g500);">found</span>
+          </div>
           <div class="sbar-r" style="gap: 10px;">
             <select
               style="border: 2px solid #000; border-radius: 6px; padding: 7px 30px 7px 12px; font-weight: 500; font-family:var(--fb); background: #fff url('data:image/svg+xml;utf8,<svg fill=%22black%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/><path d=%22M0 0h24v24H0z%22 fill=%22none%22/></svg>') no-repeat right 6px center; -webkit-appearance: none; appearance: none;">
@@ -2311,12 +2285,13 @@
             </button>
           </div>
         </div>
-        <div class="pgrid" id="pgrid-main">
+        <div class="pgrid" id="pgrid-search">
           <!-- Centralized listings will be rendered here -->
         </div>
         <div style="text-align:center;margin-top:24px;padding-top:14px;border-top:1px solid var(--g200);">
-          <div style="font-size:13px;color:var(--g500);margin-bottom:10px;">Showing 6 of 24 properties</div>
-          <button class="btn bs" onclick="loadMoreProps(this)">Load more properties</button>
+          <div style="font-size:13px;color:var(--g500);margin-bottom:10px;" id="load-more-status">Showing 0 properties
+          </div>
+          <button class="btn bs" onclick="window.loadMoreProps(this)">Load more properties</button>
         </div>
       </div>
     </div>
@@ -2326,12 +2301,13 @@
   <div id="page-detail" class="page">
     <div
       style="background:var(--g50);border-bottom:1px solid var(--g200);padding:11px 28px;font-size:13px;color:var(--g500);">
-      <span onclick="gto('listings')" style="cursor:pointer;color:var(--blue);">← Properties</span> / <span>Sunrise
-        Apartments 3B</span>
+      <span onclick="gto('listings')" style="cursor:pointer;color:var(--blue);">← Properties</span> / <span
+        id="dtl-bread-title">Sunrise Apartments 3B</span>
     </div>
     <div class="dwrap">
       <div class="dgal">
-        <div class="gm" style="background:linear-gradient(135deg,#B5D4F4,#E6F1FB);">🏢</div>
+        <div class="gm" id="dtl-img-main"
+          style="background:linear-gradient(135deg,#B5D4F4,#E6F1FB);background-size:cover;">🏢</div>
         <div class="gt">
           <div class="gth" style="background:linear-gradient(135deg,#C0DD97,#EAF3DE);">🛋️</div>
           <div class="gth" style="background:linear-gradient(135deg,#FAC775,#FAEEDA);">🍳</div>
@@ -2340,13 +2316,15 @@
       <div class="dlayout">
         <div>
           <div style="margin-bottom:7px;"><span class="badge bg">Available now</span></div>
-          <div class="dtitle">Sunrise Apartments, Unit 3B</div>
-          <div class="dloc">📍 Naivasha CBD, Nakuru County</div>
+          <div class="dtitle" id="dtl-title">Sunrise Apartments, Unit 3B</div>
+          <div class="dloc" id="dtl-loc">📍 Naivasha CBD, Nakuru County</div>
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:14px 0;">
-            <div class="dprice">KSh 12,000<span style="font-size:15px;font-weight:400;">/mo</span></div>
-            <div style="text-align:right;font-size:12px;color:var(--g500);">Deposit: KSh 24,000 (2 months)</div>
+            <div class="dprice" id="dtl-price">KSh 12,000<span style="font-size:15px;font-weight:400;">/mo</span></div>
+            <div style="text-align:right;font-size:12px;color:var(--g500);">Deposit: <span id="dtl-dep">KSh 24,000 (2
+                months)</span></div>
           </div>
-          <div class="ddesc">Bright, newly built 1-bedroom apartment in Naivasha CBD. Modern fittings, 24-hour water
+          <div class="ddesc" id="dtl-desc">Bright, newly built 1-bedroom apartment in Naivasha CBD. Modern fittings,
+            24-hour water
             supply, and a secure compound with CCTV cameras. Walking distance to the market, schools, and public
             transport.</div>
           <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Property features</div>
@@ -2359,8 +2337,9 @@
             <div class="fi"><span class="fiicon">🔒</span>CCTV security</div>
           </div>
           <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Location</div>
-          <div class="mapph">📍<div style="font-weight:600;">Naivasha CBD</div><a href="https://maps.google.com"
-              target="_blank" style="color:var(--blue);font-size:12px;">Open in Google Maps →</a></div>
+          <div class="mapph">📍<div style="font-weight:600;" id="dtl-loc-sub">Naivasha CBD</div><a id="dtl-map-link"
+              href="https://maps.google.com" target="_blank" style="color:var(--blue);font-size:12px;">Open in Google
+              Maps →</a></div>
         </div>
         <div>
           <div class="bcard">
@@ -2373,21 +2352,22 @@
               </select></div>
             <div style="background:var(--g50);border-radius:var(--rsm);padding:11px;margin-bottom:13px;font-size:13px;">
               <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>Monthly rent</span><span
-                  style="font-weight:600;">KSh 12,000</span></div>
+                  style="font-weight:600;" id="dtl-book-rent">KSh 12,000</span></div>
               <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>Deposit (2
-                  months)</span><span style="font-weight:600;">KSh 24,000</span></div>
+                  months)</span><span style="font-weight:600;" id="dtl-book-dep">KSh 24,000</span></div>
               <div
                 style="border-top:1px solid var(--g200);padding-top:7px;margin-top:7px;display:flex;justify-content:space-between;">
-                <span style="font-weight:600;">Move-in total</span><span style="font-weight:700;color:var(--blue);">KSh
+                <span style="font-weight:600;">Move-in total</span><span style="font-weight:700;color:var(--blue);"
+                  id="dtl-book-total">KSh
                   36,000</span>
               </div>
             </div>
             <button class="btn bp" style="width:100%;margin-bottom:7px;" onclick="gto('login')">Book now</button>
             <button class="btn bwa" style="width:100%;" onclick="waLandlord()">💬 WhatsApp landlord</button>
             <div class="lcard">
-              <div class="lav" style="background:#E6F1FB;color:#0C447C;">JK</div>
+              <div class="lav" style="background:#E6F1FB;color:#0C447C;" id="dtl-l-init">JK</div>
               <div style="flex:1;">
-                <div style="font-size:13px;font-weight:600;">James Kamau</div>
+                <div style="font-size:13px;font-weight:600;" id="dtl-l-name">James Kamau</div>
                 <div style="font-size:11px;color:var(--g500);">✅ Verified · ⭐ 4.8</div>
               </div>
               <div style="display:flex;gap:5px;"><button class="btn bs bxs"
@@ -2425,7 +2405,8 @@
           <div class="ff"><label class="ffl">Email Address</label><input type="email" name="email"
               placeholder="you@example.com" required></div>
           <div class="ff"><label class="ffl">Join as</label>
-            <select name="role" style="width:100%;padding:12px;border:1px solid var(--g200);border-radius:var(--rsm);">
+            <select name="role"
+              style="width:100%;padding:12px;border:1.5px solid var(--g200);border-radius:var(--rsm);">
               <option value="Tenant">Tenant</option>
               <option value="Landlord">Landlord</option>
               <option value="Admin">Admin</option>
@@ -2450,22 +2431,23 @@
         <div class="ccard">
           <h3 style="font-size:18px; margin-bottom:8px;">Send us a message</h3>
           <p style="margin-bottom:22px;">We reply within a few hours on weekdays.</p>
-          <div class="cf"><label class="cfl">Your name</label><input type="text" class="c-val" placeholder="Full name">
+          <div class="cf"><label class="cfl">Your name</label><input type="text" id="contact-name" class="c-val"
+              placeholder="Full name">
           </div>
-          <div class="cf"><label class="cfl">Email</label><input type="email" class="c-val"
+          <div class="cf"><label class="cfl">Email</label><input type="email" id="contact-email" class="c-val"
               placeholder="you@example.com"></div>
           <div class="cf"><label class="cfl">Subject</label>
-            <select class="c-val"
+            <select id="contact-subject" class="c-val"
               style="-webkit-appearance: none; appearance: none; background: var(--g50) url('data:image/svg+xml;utf8,<svg fill=%22black%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/><path d=%22M0 0h24v24H0z%22 fill=%22none%22/></svg>') no-repeat right 8px center;">
               <option>General enquiry</option>
               <option>Booking issue</option>
               <option>Landlord support</option>
             </select>
           </div>
-          <div class="cf"><label class="cfl">Message</label><textarea class="c-val"
+          <div class="cf"><label class="cfl">Message</label><textarea id="contact-msg" class="c-val"
               placeholder="How can we help you?"></textarea></div>
-          <button class="btn bp" style="width:100%;margin-top:4px;" onclick="submitContact()">Send message</button>
-          <button class="btn"
+          <button class="btn bp" style="width:100%;margin-top:4px;" onclick="submitContact(this)">Send message</button>
+          <button class="btn" onclick="waContact()"
             style="width:100%;margin-top:10px;background:#25D366;color:#fff;border-color:#25D366;font-weight:600;"><span
               style="font-size:16px;">💬</span> Chat on WhatsApp</button>
         </div>
@@ -2478,21 +2460,24 @@
             <div class="ciicon" style="background:#FCEBEB;">📞</div>
             <div>
               <div style="font-size:11px;color:var(--g500);">Phone</div>
-              <div style="font-size:14px;font-weight:600;color:var(--g800);">+254 700 000 000</div>
+              <div id="cms-contact-phone" style="font-size:14px;font-weight:600;color:var(--g800);">+254 700 000 000
+              </div>
             </div>
           </div>
           <div class="cir">
             <div class="ciicon" style="background:#E6F1FB;">✉️</div>
             <div>
               <div style="font-size:11px;color:var(--g500);">Email</div>
-              <div style="font-size:14px;font-weight:500;color:var(--g800);">info@marshalrentals.co.ke</div>
+              <div id="cms-contact-email" style="font-size:14px;font-weight:500;color:var(--g800);">
+                info@marshalrentals.co.ke</div>
             </div>
           </div>
           <div class="cir">
             <div class="ciicon" style="background:#FBEAF0;">📍</div>
             <div>
               <div style="font-size:11px;color:var(--g500);">Office</div>
-              <div style="font-size:14px;font-weight:500;color:var(--g800);">Naivasha CBD, Nakuru County</div>
+              <div id="cms-contact-address" style="font-size:14px;font-weight:500;color:var(--g800);">Naivasha CBD,
+                Nakuru County</div>
             </div>
           </div>
           <div class="cir">
@@ -2681,8 +2666,8 @@
               placeholder="you@example.com" required></div>
           <div class="ff"><label class="ffl">Password</label><input type="password" name="password"
               placeholder="••••••••" required></div>
-          <div style="text-align:right;margin:-4px 0 14px;font-size:13px;"><a
-              style="color:var(--blue);cursor:pointer;" onclick="window.platformResetPassword()">Forgot password?</a></div>
+          <div style="text-align:right;margin:-4px 0 14px;font-size:13px;"><a style="color:var(--blue);cursor:pointer;"
+              onclick="window.platformResetPassword()">Forgot password?</a></div>
           <button type="submit" class="btn bp"
             style="width:100%;padding:14px;font-size:15px;display:flex;justify-content:center;align-items:center;gap:10px;">Sign
             in</button>
@@ -2697,9 +2682,9 @@
     <div class="dshell">
       <div class="dsb">
         <div class="dub">
-          <div class="dav" style="background:#E6F1FB;color:#0C447C;">GW</div>
+          <div class="dav" style="background:#E6F1FB;color:#0C447C;" id="t-avatar">?</div>
           <div>
-            <div class="dun">Grace Wanjiku</div>
+            <div class="dun" id="t-sidebar-name">Loading...</div>
             <div class="dur">Tenant</div><span class="dub2" style="background:#EAF3DE;color:#27500A;">✓ Active
               lease</span>
           </div>
@@ -2707,10 +2692,8 @@
         <div class="dns">My home</div>
         <button class="dni active" onclick="ds('tenant','t-overview',this)"><span
             class="dniicon">🏠</span>Overview</button>
-        <button class="dni" onclick="ds('tenant','t-payments',this)"><span class="dniicon">💳</span>Payments<span
-            class="dnib">1</span></button>
-        <button class="dni" onclick="ds('tenant','t-maint',this)"><span class="dniicon">🔧</span>Maintenance<span
-            class="dnib">2</span></button>
+        <button class="dni" onclick="ds('tenant','t-payments',this)"><span class="dniicon">💳</span>Payments</button>
+        <button class="dni" onclick="ds('tenant','t-maint',this)"><span class="dniicon">🔧</span>Maintenance</button>
         <button class="dni" onclick="ds('tenant','t-docs',this)"><span class="dniicon">📄</span>Documents</button>
         <div class="dns">Discover</div>
         <button class="dni" onclick="ds('tenant','t-saved',this)"><span class="dniicon">❤️</span>Saved</button>
@@ -2727,68 +2710,46 @@
         <div class="dcont">
 
           <div class="dsec active" id="sec-t-overview">
-            <div
+            <div id="t-lease-banner"
               style="background:var(--blue-dk);border-radius:var(--rlg);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;color:#fff;">
               <div>
-                <div style="font-size:14px;font-weight:600;">Sunrise Apartments, Unit 3B — Naivasha CBD</div>
-                <div style="font-size:12px;color:#85B7EB;margin-top:3px;">Lease: Jan–Dec 2025 · <span class="badge bg"
-                    style="font-size:10px;">Active</span></div>
+                <div style="font-size:14px;font-weight:600;" id="t-lease-property">No active lease</div>
+                <div style="font-size:12px;color:#85B7EB;margin-top:3px;">Sign in to view your lease details</div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:20px;font-weight:700;color:#97C459;">KSh 12,000/mo</div>
-                <div style="font-size:11px;color:#85B7EB;">Next due: 1 Apr 2025</div>
+                <div style="font-size:20px;font-weight:700;color:#97C459;" id="t-lease-rent">—</div>
+                <div style="font-size:11px;color:#85B7EB;" id="t-lease-due"></div>
               </div>
             </div>
             <div class="mrow">
               <div class="mc" onclick="ds('tenant','t-payments',null)">
                 <div class="mlbl">Rent status</div>
-                <div class="mval" style="color:var(--green);">Paid</div>
-                <div class="msub" style="color:var(--g500);">March 2025</div>
+                <div class="mval" id="t-stat-rent" style="color:var(--g500);">—</div>
+                <div class="msub" style="color:var(--g500);" id="t-stat-rent-sub">No data</div>
               </div>
               <div class="mc" onclick="ds('tenant','t-settings',null)">
                 <div class="mlbl">Lease remaining</div>
-                <div class="mval" style="color:var(--blue);">9 mo</div>
-                <div class="msub" style="color:var(--g500);">Ends Dec 2025</div>
+                <div class="mval" id="t-stat-lease" style="color:var(--g500);">—</div>
+                <div class="msub" style="color:var(--g500);">Pending setup</div>
               </div>
               <div class="mc" onclick="ds('tenant','t-maint',null)">
                 <div class="mlbl">Open requests</div>
-                <div class="mval" style="color:var(--amber);">2</div>
-                <div class="msub mdn">1 urgent</div>
+                <div class="mval" id="t-stat-maint" style="color:var(--g500);">0</div>
+                <div class="msub" style="color:var(--g500);">None pending</div>
               </div>
               <div class="mc" onclick="ds('tenant','t-saved',null)">
                 <div class="mlbl">Saved properties</div>
-                <div class="mval">4</div>
+                <div class="mval" id="t-stat-saved" style="color:var(--g500);">0</div>
                 <div class="msub" style="color:var(--g500);">Favourites</div>
               </div>
             </div>
             <div class="dc2">
               <div class="dcard">
                 <div class="dct">Payment history</div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">March 2025</div>
-                    <div style="font-size:11px;color:var(--g500);">1 Mar · M-Pesa · MP2503001</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
-                  </div>
-                </div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">February 2025</div>
-                    <div style="font-size:11px;color:var(--g500);">1 Feb · M-Pesa</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
-                  </div>
-                </div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">January 2025</div>
-                    <div style="font-size:11px;color:var(--g500);">2 Jan · M-Pesa</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
+                <div id="t-overview-payments">
+                  <div style="text-align:center;padding:30px;color:var(--g500);">
+                    <div style="font-size:28px;margin-bottom:8px;">💳</div>
+                    <div>No payment records yet</div>
                   </div>
                 </div>
                 <button class="btn bs bsm" style="width:100%;margin-top:9px;"
@@ -2796,37 +2757,25 @@
               </div>
               <div class="dcard">
                 <div class="dct">Lease progress</div>
-                <div style="font-size:12px;color:var(--g500);margin-bottom:5px;">Jan 2025 → Dec 2025 (12 months)</div>
-                <div style="background:var(--g100);border-radius:99px;height:7px;margin-bottom:5px;">
-                  <div style="width:25%;height:7px;border-radius:99px;background:var(--blue);"></div>
+                <div id="t-lease-progress-wrap">
+                  <div style="text-align:center;padding:20px;color:var(--g500);font-size:13px;">
+                    No lease data available yet.
+                  </div>
                 </div>
-                <div style="font-size:12px;color:var(--g500);margin-bottom:16px;">3 of 12 months completed</div>
                 <div class="dct">Landlord</div>
-                <div
+                <div id="t-landlord-box"
                   style="display:flex;align-items:center;gap:9px;padding:9px;background:var(--g50);border-radius:var(--rmd);">
-                  <div class="dav" style="background:#EAF3DE;color:#27500A;">JK</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;">James Kamau</div>
-                    <div style="font-size:11px;color:var(--g500);">Verified · ⭐ 4.8</div>
-                    <button class="btn bwa bxs" onclick="waLandlord()">WA</button>
+                  <div style="color:var(--g500);font-size:13px;">Contact info will appear once your lease is set up.
                   </div>
                 </div>
               </div>
               <div class="dcardf">
                 <div class="dct">Maintenance requests</div>
-                <div class="rrow">
-                  <div class="ric" style="background:#FAEEDA;">🔧</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Leaking tap — bathroom</div>
-                    <div style="font-size:11px;color:var(--g500);">15 Mar 2025</div>
-                  </div><span class="badge ba">In Progress</span>
-                </div>
-                <div class="rrow">
-                  <div class="ric" style="background:#FCEBEB;">🐜</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Pest control — kitchen</div>
-                    <div style="font-size:11px;color:var(--g500);">18 Mar 2025</div>
-                  </div><span class="badge bb">Pending</span>
+                <div id="t-overview-maint-list">
+                  <div style="text-align:center;padding:30px;color:var(--g500);">
+                    <div style="font-size:28px;margin-bottom:8px;">🔧</div>
+                    <div>No open requests</div>
+                  </div>
                 </div>
                 <button class="btn bp bsm" style="margin-top:9px;" onclick="ds('tenant','t-maint',null)">Submit new
                   request</button>
@@ -2837,15 +2786,15 @@
           <div class="dsec" id="sec-t-payments">
             <div class="dcardf">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                <div class="dct" style="margin:0;">Pay April rent</div><span class="badge ba">Due 1 Apr 2025</span>
+                <div class="dct" style="margin:0;">Rent Payment</div>
               </div>
               <div
                 style="background:var(--g50);border-radius:var(--rmd);padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--g200);">
                 <div>
                   <div style="font-size:11px;color:var(--g500);">Amount due</div>
-                  <div style="font-size:24px;font-weight:700;color:var(--blue);">KSh 12,000</div>
+                  <div style="font-size:24px;font-weight:700;color:var(--blue);" id="t-pay-amount">—</div>
                 </div>
-                <div style="text-align:right;font-size:12px;color:var(--g500);">April 2025<br>Sunrise Apts 3B</div>
+                <div style="text-align:right;font-size:12px;color:var(--g500);" id="t-pay-info">No active lease</div>
               </div>
               <div style="display:flex;gap:7px;"><button class="btn bg-btn" style="flex:1;" onclick="payMpesa()">Pay
                   via
@@ -2854,40 +2803,12 @@
             </div>
             <div class="dcardf">
               <div class="dct">Full payment history</div>
-              <div class="prow">
-                <div>
-                  <div style="font-weight:600;">March 2025</div>
-                  <div style="font-size:11px;color:var(--g500);">MP2503001</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
-                </div>
-              </div>
-              <div class="prow">
-                <div>
-                  <div style="font-weight:600;">February 2025</div>
-                  <div style="font-size:11px;color:var(--g500);">MP2502001</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
-                </div>
-              </div>
-              <div class="prow">
-                <div>
-                  <div style="font-weight:600;">January 2025</div>
-                  <div style="font-size:11px;color:var(--g500);">MP2501002</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-weight:600;color:var(--blue);">KSh 12,000</div><span class="badge bg">Paid</span>
-                </div>
-              </div>
-              <div class="prow">
-                <div>
-                  <div style="font-weight:600;">Deposit</div>
-                  <div style="font-size:11px;color:var(--g500);">DEP001 · Dec 2024</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-weight:600;color:var(--blue);">KSh 24,000</div><span class="badge bb">Deposit</span>
+              <div id="t-payment-history-list">
+                <div style="text-align:center;padding:40px;color:var(--g500);">
+                  <div style="font-size:32px;margin-bottom:10px;">💳</div>
+                  <div style="font-weight:500;">No payment records yet</div>
+                  <div style="font-size:12px;margin-top:5px;">Your payments will appear here after your landlord sets up
+                    your lease.</div>
                 </div>
               </div>
             </div>
@@ -2990,10 +2911,16 @@
             <div class="dc2">
               <div class="dcard">
                 <div class="dct">Profile</div>
-                <div class="df"><label class="dfl">Full name</label><input type="text" value="Grace Wanjiku"></div>
-                <div class="df"><label class="dfl">Email</label><input type="email" value="grace@email.com"></div>
-                <div class="df"><label class="dfl">Phone (WhatsApp)</label><input type="tel" value="+254 712 345 678">
+                <div class="df"><label class="dfl">Full name</label><input type="text" id="t-set-name"
+                    placeholder="Your full name"></div>
+                <div class="df">
+                  <label class="dfl">Email</label>
+                  <input type="email" id="t-set-email" placeholder="your@email.com">
+                  <div style="font-size:11px;color:var(--g500);margin-top:4px;">⚠️ Changing your email will require
+                    re-verification.</div>
                 </div>
+                <div class="df"><label class="dfl">Phone (WhatsApp)</label><input type="tel" id="t-set-phone"
+                    placeholder="+254 7XX XXX XXX"></div>
                 <button class="btn bp" style="width:100%;" onclick="saveProfile(this)">Save changes</button>
               </div>
               <div class="dcard">
@@ -3038,10 +2965,10 @@
     <div class="dshell">
       <div class="dsb" style="background:#f0fdf8;border-right-color:#C6E8DF;">
         <div class="dub" style="border-bottom-color:#C6E8DF;">
-          <div class="dav" style="background:#D1FAE5;color:#065F46;">JK</div>
+          <div class="dav" style="background:#D1FAE5;color:#065F46;" id="l-avatar">?</div>
           <div>
-            <div class="dun">James Kamau</div>
-            <div class="dur">Landlord</div><span class="dub2" style="background:#D1FAE5;color:#065F46;">✓
+            <div class="dun" id="l-sidebar-name">Loading...</div>
+            <div class="dur">Landlord</div><span class="badge bg" style="font-size:10px;padding:2px 6px;">✓
               Verified</span>
           </div>
         </div>
@@ -3053,13 +2980,10 @@
         <button class="dni" onclick="ds('landlord','l-tenants',this)"><span class="dniicon">👥</span>Tenants</button>
         <div class="dns">Financials</div>
         <button class="dni" onclick="ds('landlord','l-income',this)"><span class="dniicon">💰</span>Income</button>
-        <button class="dni" onclick="ds('landlord','l-payments',this)"><span class="dniicon">💳</span>Payments<span
-            class="dnib">1</span></button>
+        <button class="dni" onclick="ds('landlord','l-payments',this)"><span class="dniicon">💳</span>Payments</button>
         <div class="dns">Operations</div>
-        <button class="dni" onclick="ds('landlord','l-maint',this)"><span class="dniicon">🔧</span>Maintenance<span
-            class="dnib">3</span></button>
-        <button class="dni" onclick="ds('landlord','l-msgs',this)"><span class="dniicon">💬</span>Messages<span
-            class="dnib">2</span></button>
+        <button class="dni" onclick="ds('landlord','l-maint',this)"><span class="dniicon">🔧</span>Maintenance</button>
+        <button class="dni" onclick="ds('landlord','l-msgs',this)"><span class="dniicon">💬</span>Messages</button>
         <button class="dni" onclick="ds('landlord','l-docs',this)"><span class="dniicon">📁</span>Documents</button>
         <button class="dni" onclick="ds('landlord','l-settings',this)"><span class="dniicon">⚙️</span>Settings</button>
         <div class="dso"><button onclick="logout()">Sign out</button></div>
@@ -3076,23 +3000,23 @@
             <div class="mrow">
               <div class="mc" onclick="ds('landlord','l-props',null)">
                 <div class="mlbl">Properties</div>
-                <div class="mval" style="color:var(--green);">4</div>
-                <div class="msub mup">3 occupied · 1 vacant</div>
+                <div class="mval" id="l-stat-props">0</div>
+                <div class="msub">Manage your listings</div>
               </div>
               <div class="mc" onclick="ds('landlord','l-income',null)">
-                <div class="mlbl">Income (Mar)</div>
-                <div class="mval" style="color:var(--green);">KSh 57K</div>
-                <div class="msub mup">↑ 8% vs Feb</div>
+                <div class="mlbl">Income (Month)</div>
+                <div class="mval" id="l-stat-income">KSh 0</div>
+                <div class="msub">Total collected</div>
               </div>
               <div class="mc" onclick="ds('landlord','l-payments',null)">
                 <div class="mlbl">Overdue rent</div>
-                <div class="mval" style="color:var(--red);">KSh 8.5K</div>
-                <div class="msub mdn">1 tenant late</div>
+                <div class="mval" id="l-stat-overdue" style="color:var(--red);">KSh 0</div>
+                <div class="msub">Outstanding balance</div>
               </div>
               <div class="mc" onclick="ds('landlord','l-maint',null)">
                 <div class="mlbl">Open requests</div>
-                <div class="mval" style="color:var(--amber);">3</div>
-                <div class="msub mdn">1 urgent</div>
+                <div class="mval" id="l-stat-maint" style="color:var(--amber);">0</div>
+                <div class="msub">Active issues</div>
               </div>
             </div>
             <div class="dc2">
@@ -3102,61 +3026,21 @@
               </div>
               <div class="dcard">
                 <div class="dct">Occupancy</div>
-                <div class="pr"><span>Sunrise Apts 3B</span>
-                  <div class="pbw">
-                    <div class="pb" style="width:100%;background:var(--green);"></div>
-                  </div><span class="badge bg">Occupied</span>
-                </div>
-                <div class="pr"><span>Lake View Villa</span>
-                  <div class="pbw">
-                    <div class="pb" style="width:100%;background:var(--green);"></div>
-                  </div><span class="badge bg">Occupied</span>
-                </div>
-                <div class="pr"><span>Kongoni Gardens B4</span>
-                  <div class="pbw">
-                    <div class="pb" style="width:100%;background:var(--green);"></div>
-                  </div><span class="badge bg">Occupied</span>
-                </div>
-                <div class="pr"><span>Nakuru Studio 1</span>
-                  <div class="pbw">
-                    <div class="pb" style="width:20%;background:var(--amber);"></div>
-                  </div><span class="badge ba">Vacant</span>
-                </div>
-                <div
-                  style="display:flex;justify-content:space-between;font-size:13px;padding-top:9px;margin-top:3px;border-top:1px solid var(--g100);">
-                  <span style="color:var(--g500);">Overall occupancy</span><span
-                    style="font-weight:600;color:var(--green);">75%</span>
+                <div id="l-occupancy-list" style="min-height:100px;">
+                  <div style="text-align:center;padding:40px;color:var(--g500);">
+                    <div style="font-size:24px;margin-bottom:7px;">🏘️</div>
+                    <div style="font-size:13px;">No properties listed yet</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div class="dc2">
               <div class="dcard">
                 <div class="dct">Recent payments</div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">Grace Wanjiku</div>
-                    <div style="font-size:11px;color:var(--g500);">Sunrise 3B · 1 Mar</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--green);">KSh 12,000</div><span class="badge bg">Paid</span>
-                  </div>
-                </div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">Peter Otieno</div>
-                    <div style="font-size:11px;color:var(--g500);">Lake View · 1 Mar</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--green);">KSh 45,000</div><span class="badge bg">Paid</span>
-                  </div>
-                </div>
-                <div class="prow">
-                  <div>
-                    <div style="font-weight:600;">David Mwangi</div>
-                    <div style="font-size:11px;color:var(--g500);">Kongoni B4 · Overdue</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-weight:600;color:var(--red);">KSh 8,500</div><span class="badge br">Overdue</span>
+                <div id="l-overview-payments">
+                  <div style="text-align:center;padding:40px;color:var(--g500);">
+                    <div style="font-size:24px;margin-bottom:7px;">💳</div>
+                    <div style="font-size:13px;">No recent payments</div>
                   </div>
                 </div>
                 <button class="btn bs bsm" style="width:100%;margin-top:9px;"
@@ -3164,19 +3048,11 @@
               </div>
               <div class="dcard">
                 <div class="dct">Maintenance alerts</div>
-                <div class="rrow">
-                  <div class="ric" style="background:#FCEBEB;">🐜</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Pest control — Sunrise 3B</div>
-                    <div style="font-size:11px;color:var(--g500);">Grace Wanjiku · 18 Mar</div>
-                  </div><span class="badge br">Urgent</span>
-                </div>
-                <div class="rrow">
-                  <div class="ric" style="background:#FAEEDA;">🔧</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Leaking tap — Sunrise 3B</div>
-                    <div style="font-size:11px;color:var(--g500);">Grace Wanjiku · 15 Mar</div>
-                  </div><span class="badge ba">In Progress</span>
+                <div id="l-overview-maint">
+                  <div style="text-align:center;padding:40px;color:var(--g500);">
+                    <div style="font-size:24px;margin-bottom:7px;">🔧</div>
+                    <div style="font-size:13px;">No active requests</div>
+                  </div>
                 </div>
                 <button class="btn bg-btn bsm" style="margin-top:9px;" onclick="ds('landlord','l-maint',null)">Manage
                   all</button>
@@ -3186,108 +3062,15 @@
 
           <div class="dsec" id="sec-l-props">
             <div style="display:flex;justify-content:space-between;margin-bottom:14px;">
-              <div style="font-size:14px;font-weight:600;">My properties (4)</div>
+              <div style="font-size:14px;font-weight:600;" id="l-props-count-text">My properties (0)</div>
             </div>
-            <div class="psc">
-              <div class="pst" style="background:var(--green);"></div>
-              <div class="psh">
-                <div>
-                  <div style="font-weight:600;">Sunrise Apartments 3B</div>
-                  <div style="font-size:12px;color:var(--g500);">📍 Naivasha CBD</div>
-                </div>
-                <div style="display:flex;gap:5px;"><span class="badge bg">Occupied</span><button class="btn bs bxs"
-                    onclick="lPropAction('View', 'Sunrise Apartments 3B')">View</button><button class="btn bs bxs"
-                    onclick="lPropAction('Edit', 'Sunrise Apartments 3B')">Edit</button><button class="btn bs bxs"
-                    style="color:var(--red);border-color:var(--red);"
-                    onclick="lPropAction('Delete', 'Sunrise Apartments 3B')">Del</button></div>
-              </div>
-              <div class="psb">
-                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;"><span class="badge bb">1
-                    BR</span><span class="badge bt">WiFi</span><span class="badge 
-                  bt">Water</span><span class="badge bt">Security</span></div>
-                <div class="pss3">
-                  <div class="pss">
-                    <div class="pssv" style="color:var(--green);">KSh 12K</div>
-                    <div class="pssl">Monthly rent</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">Grace W.</div>
-                    <div class="pssl">Tenant</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">9 mo</div>
-                    <div class="pssl">Lease left</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="psc">
-              <div class="pst" style="background:var(--green);"></div>
-              <div class="psh">
-                <div>
-                  <div style="font-weight:600;">Lake View Villa</div>
-                  <div style="font-size:12px;color:var(--g500);">📍 Hell's Gate Estate</div>
-                </div>
-                <div style="display:flex;gap:5px;"><span class="badge bg">Occupied</span><button class="btn bs bxs"
-                    onclick="lPropAction('View', 'Lake View Villa')">View</button><button class="btn bs bxs"
-                    onclick="lPropAction('Edit', 'Lake View Villa')">Edit</button><button class="btn bs bxs"
-                    style="color:var(--red);border-color:var(--red);"
-                    onclick="lPropAction('Delete', 'Lake View Villa')">Del</button></div>
-              </div>
-              <div class="psb">
-                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;"><span class="badge bb">3
-                    BR</span><span class="badge bt">Garden</span><span class="badge 
-                  bt">Parking</span></div>
-                <div class="pss3">
-                  <div class="pss">
-                    <div class="pssv" style="color:var(--green);">KSh 45K</div>
-                    <div class="pssl">Monthly rent</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">Peter O.</div>
-                    <div class="pssl">Tenant</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">6 mo</div>
-                    <div class="pssl">Lease left</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="psc">
-              <div class="pst" style="background:var(--amber);"></div>
-              <div class="psh">
-                <div>
-                  <div style="font-weight:600;">Nakuru Studio 1</div>
-                  <div style="font-size:12px;color:var(--g500);">📍 Nakuru CBD</div>
-                </div>
-                <div style="display:flex;gap:5px;"><span class="badge ba">Vacant</span><button class="btn bs bxs"
-                    onclick="lPropAction('View', 'Nakuru Studio 1')">View</button><button class="btn bs bxs"
-                    onclick="lPropAction('Edit', 'Nakuru Studio 1')">Edit</button><button class="btn bs bxs"
-                    style="color:var(--red);border-color:var(--red);"
-                    onclick="lPropAction('Delete', 'Nakuru Studio 1')">Del</button><button class="btn bxs"
-                    style="background:var(--green);color:#fff;" onclick="lPropBoost('Nakuru Studio 1')">Boost</button>
-                </div>
-              </div>
-              <div class="psb">
-                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;"><span
-                    class="badge bgr">Studio</span><span class="badge bt">WiFi</span></div>
-                <div class="pss3">
-                  <div class="pss">
-                    <div class="pssv" style="color:var(--green);">KSh 7K</div>
-                    <div class="pssl">Monthly rent</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">Vacant</div>
-                    <div class="pssl">Status</div>
-                  </div>
-                  <div class="pss">
-                    <div class="pssv">14 days</div>
-                    <div class="pssl">Listed for</div>
-                  </div>
-                </div>
+            <div id="l-props-list">
+              <div
+                style="text-align:center;padding:80px;color:var(--g500);background:#fff;border-radius:var(--rmd);border:1.5px dashed var(--g200);">
+                <div style="font-size:48px;margin-bottom:15px;">🏗️</div>
+                <h3 style="color:var(--g800);">No properties yet</h3>
+                <p style="margin-bottom:20px;">Start by adding your first rental property to the platform.</p>
+                <button class="btn bg-btn" onclick="lAddProperty()">+ Add my first property</button>
               </div>
             </div>
           </div>
@@ -3296,63 +3079,25 @@
             <div class="dc3" style="grid-template-columns:1fr 1fr 1fr;">
               <div class="mc">
                 <div class="mlbl">Active tenants</div>
-                <div class="mval" style="color:var(--green);">3</div>
+                <div class="mval" id="l-stat-tenants">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Overdue payments</div>
-                <div class="mval" style="color:var(--red);">1</div>
+                <div class="mval" id="l-stat-overdue-count">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Expiring leases (90d)</div>
-                <div class="mval" style="color:var(--amber);">1</div>
+                <div class="mval" id="l-stat-expiring">0</div>
               </div>
             </div>
             <div class="dcardf">
               <div class="dct">All tenants</div>
-              <div
-                style="display:flex;align-items:center;gap:9px;padding:11px;background:var(--g50);border-radius:var(--rmd);margin-bottom:7px;">
-                <div class="uav" style="background:#E6F1FB;color:#0C447C;">GW</div>
-                <div style="flex:1;">
-                  <div style="font-weight:500;font-size:13px;">Grace Wanjiku</div>
-                  <div style="font-size:11px;color:var(--g500);">Sunrise 3B · +254 712 345 678</div>
+              <div id="l-tenants-list">
+                <div style="text-align:center;padding:40px;color:var(--g500);">
+                  <div style="font-size:32px;margin-bottom:10px;">👥</div>
+                  <div style="font-weight:500;">No tenants found</div>
+                  <div style="font-size:12px;margin-top:5px;">Tenants will appear here once linked to a property.</div>
                 </div>
-                <div style="text-align:right;margin-right:9px;font-size:12px;">
-                  <div style="font-weight:600;color:var(--green);">KSh 12,000/mo</div>
-                  <div style="color:var(--g500);">Dec 2025</div>
-                </div><span class="badge bg">Paid</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lViewTenant()">View</button><button class="btn bwa bxs"
-                    onclick="waTenant('254700000000', 'Tenant')">WA</button></div>
-              </div>
-              <div
-                style="display:flex;align-items:center;gap:9px;padding:11px;background:var(--g50);border-radius:var(--rmd);margin-bottom:7px;">
-                <div class="uav" style="background:#EAF3DE;color:#27500A;">PO</div>
-                <div style="flex:1;">
-                  <div style="font-weight:500;font-size:13px;">Peter Otieno</div>
-                  <div style="font-size:11px;color:var(--g500);">Lake View · +254 733 987 654</div>
-                </div>
-                <div style="text-align:right;margin-right:9px;font-size:12px;">
-                  <div style="font-weight:600;color:var(--green);">KSh 45,000/mo</div>
-                  <div style="color:var(--amber);">Exp. Jun 2025</div>
-                </div><span class="badge ba">Exp. soon</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lViewTenant()">View</button><button class="btn bwa bxs"
-                    onclick="waTenant('254700000000', 'Tenant')">WA</button></div>
-              </div>
-              <div
-                style="display:flex;align-items:center;gap:9px;padding:11px;background:#FFF5F5;border-radius:var(--rmd);border:1px solid #FECACA;">
-                <div class="uav" style="background:#FAEEDA;color:#633806;">DM</div>
-                <div style="flex:1;">
-                  <div style="font-weight:500;font-size:13px;">David Mwangi</div>
-                  <div style="font-size:11px;color:var(--g500);">Kongoni B4 · +254 700 987 654</div>
-                </div>
-                <div style="text-align:right;margin-right:9px;font-size:12px;">
-                  <div style="font-weight:600;color:var(--red);">KSh 8,500/mo</div>
-                  <div style="color:var(--red);">Overdue 5 days</div>
-                </div><span class="badge br">Overdue</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lViewTenant()">View</button><button class="btn bwa bxs"
-                    onclick="waTenant('254700000000', 'Tenant')">WA</button></div>
               </div>
             </div>
             <div class="dcardf">
@@ -3373,24 +3118,20 @@
           <div class="dsec" id="sec-l-income">
             <div class="mrow">
               <div class="mc">
-                <div class="mlbl">Collected (Mar)</div>
-                <div class="mval" style="color:var(--green);">KSh 57K</div>
-                <div class="msub mdn">KSh 8.5K outstanding</div>
+                <div class="mlbl">Collected (Month)</div>
+                <div class="mval" id="l-income-collected">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Annual run rate</div>
-                <div class="mval" style="color:var(--green);">KSh 780K</div>
-                <div class="msub mup">↑ from KSh 720K</div>
+                <div class="mval" id="l-income-annual">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Avg per property</div>
-                <div class="mval">KSh 19K</div>
-                <div class="msub mup">↑ vs last month</div>
+                <div class="mval" id="l-income-avg">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Deposit held</div>
-                <div class="mval">KSh 130K</div>
-                <div class="msub" style="color:var(--g500);">3 properties</div>
+                <div class="mval" id="l-income-deposit">KSh 0</div>
               </div>
             </div>
             <div class="dcardf">
@@ -3423,53 +3164,9 @@
                     <th style="width:100px;">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="l-payments-tbody">
                   <tr>
-                    <td style="font-weight:500;">Grace Wanjiku</td>
-                    <td style="color:var(--g500);">Sunrise 3B</td>
-                    <td style="font-weight:600;color:var(--green);">KSh 12,000</td>
-                    <td><span class="badge bg">M-Pesa</span></td>
-                    <td style="color:var(--g500);">1 Mar 2025</td>
-                    <td><span class="badge bg">Paid</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="lViewPayment(1)">View</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="lDelPayment(1)">Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">Peter Otieno</td>
-                    <td style="color:var(--g500);">Lake View</td>
-                    <td style="font-weight:600;color:var(--green);">KSh 45,000</td>
-                    <td><span class="badge bb">Card</span></td>
-                    <td style="color:var(--g500);">1 Mar 2025</td>
-                    <td><span class="badge bg">Paid</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="lViewPayment(2)">View</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="lDelPayment(2)">Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">David Mwangi</td>
-                    <td style="color:var(--g500);">Kongoni B4</td>
-                    <td style="font-weight:600;color:var(--red);">KSh 8,500</td>
-                    <td style="color:var(--g500);">—</td>
-                    <td style="color:var(--g500);">Due 1 Mar</td>
-                    <td><span class="badge br">Overdue</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="lViewPayment(3)">View</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="lDelPayment(3)">Del</button>
-                      </div>
+                    <td colspan="7" style="text-align:center;padding:40px;color:var(--g500);">No payment records found.
                     </td>
                   </tr>
                 </tbody>
@@ -3501,35 +3198,12 @@
           <div class="dsec" id="sec-l-maint">
             <div class="dcardf">
               <div class="dct">Open requests</div>
-              <div class="rrow">
-                <div class="ric" style="background:#FCEBEB;">🐜</div>
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:500;">Pest control — Sunrise 3B</div>
-                  <div style="font-size:11px;color:var(--g500);">Grace Wanjiku · 18 Mar</div>
-                </div><span class="badge br">Urgent</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lMaintRespond('Pest control — Sunrise 3B','Grace Wanjiku')">Respond</button><button
-                    class="btn bwa bxs" onclick="waTenant('254712345678','Grace Wanjiku')">WA</button></div>
-              </div>
-              <div class="rrow">
-                <div class="ric" style="background:#FAEEDA;">🔧</div>
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:500;">Leaking tap — Sunrise 3B</div>
-                  <div style="font-size:11px;color:var(--g500);">Grace Wanjiku · 15 Mar</div>
-                </div><span class="badge ba">In Progress</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lMaintRespond('Leaking tap — Sunrise 3B','Grace Wanjiku')">Update</button><button
-                    class="btn bwa bxs" onclick="waTenant('254712345678','Grace Wanjiku')">WA</button></div>
-              </div>
-              <div class="rrow">
-                <div class="ric" style="background:#FAEEDA;">🚪</div>
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:500;">Gate lock broken — Lake View</div>
-                  <div style="font-size:11px;color:var(--g500);">Peter Otieno · 10 Mar</div>
-                </div><span class="badge ba">In Progress</span>
-                <div style="display:flex;gap:4px;margin-left:7px;"><button class="btn bs bxs"
-                    onclick="lMaintRespond('Gate lock broken — Lake View','Peter Otieno')">Update</button><button
-                    class="btn bwa bxs" onclick="waTenant('254733987654','Peter Otieno')">WA</button></div>
+              <div id="l-maint-list">
+                <div style="text-align:center;padding:40px;color:var(--g500);">
+                  <div style="font-size:32px;margin-bottom:10px;">🔧</div>
+                  <div style="font-weight:500;">No active requests</div>
+                  <div style="font-size:12px;margin-top:5px;">Maintenance requests from tenants will appear here.</div>
+                </div>
               </div>
             </div>
             <div class="dcardf">
@@ -3556,61 +3230,11 @@
           </div>
 
           <div class="dsec" id="sec-l-msgs">
-            <div class="mlayout">
-              <div class="dcard">
-                <div class="dct">Conversations</div>
-                <div class="mlrow active"
-                  onclick="lSwitchConv('Grace Wanjiku','GW','#E6F1FB','#0C447C','Sunrise Apts 3B')">
-                  <div class="uav" style="background:#E6F1FB;color:#0C447C;width:34px;height:34px;flex-shrink:0;">GW
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;">Grace
-                      Wanjiku<span style="font-size:10px;color:var(--g500);font-weight:400;">10:22 AM</span></div>
-                    <div class="mprev">Hi, just wanted to confirm the plumber is coming Friday...</div>
-                  </div>
-                  <div class="mud"></div>
-                </div>
-                <div class="mlrow" onclick="lSwitchConv('Peter Otieno','PO','#EAF3DE','#27500A','Lake View Villa')">
-                  <div class="uav" style="background:#EAF3DE;color:#27500A;width:34px;height:34px;flex-shrink:0;">PO
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;">Peter
-                      Otieno<span style="font-size:10px;color:var(--g500);font-weight:400;">Yesterday</span></div>
-                    <div class="mprev">Thank you for sorting the gate issue so quickly</div>
-                  </div>
-                  <div class="mud"></div>
-                </div>
-                <div class="mlrow" onclick="lSwitchConv('David Mwangi','DM','#FAEEDA','#633806','Kongoni B4')">
-                  <div class="uav" style="background:#FAEEDA;color:#633806;width:34px;height:34px;flex-shrink:0;">DM
-                  </div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;">David
-                      Mwangi<span style="font-size:10px;color:var(--g500);font-weight:400;">2 days ago</span></div>
-                    <div class="mprev">I will send payment by end of week, kindly bear with me</div>
-                  </div>
-                </div>
-              </div>
-              <div class="dcard">
-                <div class="mheader"
-                  style="display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid var(--g100);">
-                  <div class="uav" style="background:#E6F1FB;color:#0C447C;">GW</div>
-                  <div style="flex:1;">
-                    <div style="font-weight:600;">Grace Wanjiku</div>
-                    <div style="font-size:11px;color:var(--g500);">Sunrise Apts 3B</div>
-                  </div>
-                  <button class="btn bwa bxs" onclick="waTenant('254700000000', 'Tenant')">Open WhatsApp</button>
-                </div>
-                <div class="mbub">
-                  <div class="mbubt">Grace · 10:22 AM</div>
-                  <div class="mbubb">Hi, just wanted to confirm the plumber is coming Friday? Also is 9am okay?</div>
-                </div>
-                <div class="mcomp">
-                  <textarea>Yes confirmed for Friday 22nd at 9am. Please ensure someone is home to let him in.</textarea>
-                  <div style="display:flex;gap:6px;margin-top:7px;">
-                    <button class="btn bwa bsm" style="flex:1;" onclick="lMsgSendWa()">Send via WhatsApp</button>
-                  </div>
-                </div>
-              </div>
+            <div
+              style="text-align:center;padding:100px;color:var(--g500);background:#fff;border-radius:var(--rmd);border:1.5px dashed var(--g200);">
+              <div style="font-size:48px;margin-bottom:15px;">💬</div>
+              <h3 style="color:var(--g800);">No messages yet</h3>
+              <p>Your conversations with tenants will be displayed here.</p>
             </div>
           </div>
 
@@ -3647,19 +3271,21 @@
                 <div class="dct">Profile & verification</div>
                 <div
                   style="display:flex;align-items:center;gap:9px;padding:9px;background:var(--g50);border-radius:var(--rmd);margin-bottom:12px;">
-                  <div class="dav" style="background:#D1FAE5;color:#065F46;width:40px;height:40px;">JK</div>
+                  <div class="dav" style="background:#D1FAE5;color:#065F46;width:40px;height:40px;" id="l-set-avatar">?
+                  </div>
                   <div style="flex:1;">
-                    <div style="font-weight:600;">James Kamau</div>
-                    <div style="font-size:12px;color:var(--g500);">jkamau@email.com</div>
+                    <div style="font-weight:600;" id="l-set-name-display">Loading...</div>
+                    <div style="font-size:12px;color:var(--g500);" id="l-set-email-display">your@email.com</div>
                   </div>
                   <span class="badge bg">✓ Verified</span>
                 </div>
-                <div class="df"><label class="dfl">Full name</label><input type="text" value="James Kamau"></div>
-                <div class="df"><label class="dfl">Phone (WhatsApp)</label><input type="tel" value="+254 722 111 222">
-                </div>
-                <div class="df"><label class="dfl">M-Pesa payout number</label><input type="tel"
-                    value="+254 722 111 222"></div>
-                <button class="btn bg-btn" style="width:100%;" onclick="lSaveProfile()">Save profile</button>
+                <div class="df"><label class="dfl">Full name</label><input type="text" id="l-set-name"
+                    placeholder="Your full name"></div>
+                <div class="df"><label class="dfl">Phone (WhatsApp)</label><input type="tel" id="l-set-phone"
+                    placeholder="+254 7XX XXX XXX"></div>
+                <div class="df"><label class="dfl">M-Pesa payout number</label><input type="tel" id="l-set-mpesa"
+                    placeholder="+254 7XX XXX XXX"></div>
+                <button class="btn bg-btn" style="width:100%;" onclick="saveProfile(this)">Save profile</button>
               </div>
               <div class="dcard">
                 <div class="dct">Notifications</div>
@@ -3719,16 +3345,18 @@
             class="dniicon">📈</span>Analytics</button>
         <div class="dns" style="color:rgba(255,255,255,.3);">Management</div>
         <button class="dni" onclick="ds('admin','a-users',this)" style="color:rgba(255,255,255,.6);"><span
-            class="dniicon">👥</span>Users<span class="dnib">3</span></button>
+            class="dniicon">👥</span>Users</button>
         <button class="dni" onclick="ds('admin','a-listings',this)" style="color:rgba(255,255,255,.6);"><span
-            class="dniicon">🏘️</span>Listings<span class="dnib">2</span></button>
+            class="dniicon">🏘️</span>Listings</button>
         <button class="dni" onclick="ds('admin','a-payments',this)" style="color:rgba(255,255,255,.6);"><span
             class="dniicon">💳</span>Payments</button>
         <button class="dni" onclick="ds('admin','a-maint',this)" style="color:rgba(255,255,255,.6);"><span
-            class="dniicon">🔧</span>Maintenance<span class="dnib">5</span></button>
+            class="dniicon">🔧</span>Maintenance</button>
         <div class="dns" style="color:rgba(255,255,255,.3);">System</div>
         <button class="dni" onclick="ds('admin','a-reports',this)" style="color:rgba(255,255,255,.6);"><span
             class="dniicon">📄</span>Reports</button>
+        <button class="dni" onclick="ds('admin','a-cms',this)" style="color:rgba(255,255,255,.6);"><span
+            class="dniicon">📝</span>Content (CMS)</button>
         <button class="dni" onclick="ds('admin','a-settings',this)" style="color:rgba(255,255,255,.6);"><span
             class="dniicon">⚙️</span>Settings</button>
         <div class="dso" style="border-top:1px solid rgba(255,255,255,.08);"><button
@@ -3747,23 +3375,23 @@
             <div class="mrow">
               <div class="mc" onclick="ds('admin','a-users',null)">
                 <div class="mlbl">Total users</div>
-                <div class="mval" style="color:var(--blue);">148</div>
-                <div class="msub mup">↑ 12 this month</div>
+                <div class="mval" id="a-stat-users" style="color:var(--blue);">0</div>
+                <div class="msub">Registered accounts</div>
               </div>
               <div class="mc" onclick="ds('admin','a-listings',null)">
                 <div class="mlbl">Active listings</div>
-                <div class="mval" style="color:var(--green);">63</div>
-                <div class="msub mup">↑ 5 new</div>
+                <div class="mval" id="a-stat-listings-dash" style="color:var(--green);">0</div>
+                <div class="msub">Properties on site</div>
               </div>
               <div class="mc" onclick="ds('admin','a-payments',null)">
-                <div class="mlbl">Revenue (Mar)</div>
-                <div class="mval" style="color:var(--amber);">KSh 744K</div>
-                <div class="msub mup">↑ 8% vs Feb</div>
+                <div class="mlbl">Revenue (Month)</div>
+                <div class="mval" id="a-stat-rev" style="color:var(--amber);">KSh 0</div>
+                <div class="msub">Total transactions</div>
               </div>
               <div class="mc" onclick="ds('admin','a-maint',null)">
                 <div class="mlbl">Open issues</div>
-                <div class="mval" style="color:var(--red);">7</div>
-                <div class="msub mdn">↑ 2 new today</div>
+                <div class="mval" id="a-stat-maint" style="color:var(--red);">0</div>
+                <div class="msub">Maintenance requests</div>
               </div>
             </div>
             <div class="dc2">
@@ -3775,61 +3403,44 @@
                 <div class="dct">Occupancy by area</div>
                 <div class="pr"><span>Naivasha CBD</span>
                   <div class="pbw">
-                    <div class="pb" style="width:82%;background:var(--blue);"></div>
-                  </div><span style="font-size:12px;color:var(--g500);">82%</span>
+                    <div class="pb" id="a-bar-naivasha"
+                      style="width:0%;background:var(--blue);transition:width 1s ease-out;"></div>
+                  </div><span style="font-size:12px;color:var(--g500);" id="a-occ-naivasha">0%</span>
                 </div>
                 <div class="pr"><span>Nakuru Town</span>
                   <div class="pbw">
-                    <div class="pb" style="width:71%;background:var(--blue);"></div>
-                  </div><span style="font-size:12px;color:var(--g500);">71%</span>
+                    <div class="pb" id="a-bar-nakuru"
+                      style="width:0%;background:var(--blue);transition:width 1s ease-out;"></div>
+                  </div><span style="font-size:12px;color:var(--g500);" id="a-occ-nakuru">0%</span>
                 </div>
                 <div class="pr"><span>Kongoni</span>
                   <div class="pbw">
-                    <div class="pb" style="width:55%;background:var(--blue);"></div>
-                  </div><span style="font-size:12px;color:var(--g500);">55%</span>
+                    <div class="pb" id="a-bar-kongoni"
+                      style="width:0%;background:var(--blue);transition:width 1s ease-out;"></div>
+                  </div><span style="font-size:12px;color:var(--g500);" id="a-occ-kongoni">0%</span>
                 </div>
                 <div class="pr"><span>Hell's Gate</span>
                   <div class="pbw">
-                    <div class="pb" style="width:90%;background:var(--green);"></div>
-                  </div><span style="font-size:12px;color:var(--g500);">90%</span>
+                    <div class="pb" id="a-bar-hells"
+                      style="width:0%;background:var(--green);transition:width 1s ease-out;"></div>
+                  </div><span style="font-size:12px;color:var(--g500);" id="a-occ-hells">0%</span>
                 </div>
                 <div class="pr"><span>Maai Mahiu</span>
                   <div class="pbw">
-                    <div class="pb" style="width:40%;background:var(--amber);"></div>
-                  </div><span style="font-size:12px;color:var(--g500);">40%</span>
+                    <div class="pb" id="a-bar-maai"
+                      style="width:0%;background:var(--amber);transition:width 1s ease-out;"></div>
+                  </div><span style="font-size:12px;color:var(--g500);" id="a-occ-maai">0%</span>
                 </div>
               </div>
             </div>
             <div class="dc2">
               <div class="dcard">
                 <div class="dct">Recent alerts</div>
-                <div class="alrow" style="cursor:pointer;" onclick="ds('admin','a-listings',null)">
-                  <div class="alic" style="background:#FCEBEB;">⚠️</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Landlord unverified — 3 listings pending</div>
-                    <div style="font-size:11px;color:var(--g500);">2 hours ago</div>
-                  </div><span class="badge br">Urgent</span>
-                </div>
-                <div class="alrow" style="cursor:pointer;" onclick="ds('admin','a-payments',null)">
-                  <div class="alic" style="background:#FAEEDA;">💳</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">Payment dispute — Unit 5A Nakuru</div>
-                    <div style="font-size:11px;color:var(--g500);">5 hours ago</div>
-                  </div><span class="badge ba">Review</span>
-                </div>
-                <div class="alrow" style="cursor:pointer;" onclick="ds('admin','a-users',null)">
-                  <div class="alic" style="background:#EAF3DE;">✅</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">New landlord verified — James K.</div>
-                    <div style="font-size:11px;color:var(--g500);">Yesterday</div>
-                  </div><span class="badge bg">Done</span>
-                </div>
-                <div class="alrow" style="cursor:pointer;" onclick="ds('admin','a-maint',null)">
-                  <div class="alic" style="background:#E6F1FB;">📋</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:500;">5 maintenance requests unassigned</div>
-                    <div style="font-size:11px;color:var(--g500);">Today</div>
-                  </div><span class="badge bb">Info</span>
+                <div id="a-alerts-list">
+                  <div style="text-align:center;padding:40px;color:var(--g500);">
+                    <div style="font-size:24px;margin-bottom:7px;">🔔</div>
+                    <div style="font-size:13px;">No new alerts</div>
+                  </div>
                 </div>
               </div>
               <div class="dcard">
@@ -3849,18 +3460,18 @@
             <div class="dc3">
               <div class="mc">
                 <div class="mlbl">Avg. rent (Naivasha)</div>
-                <div class="mval" style="color:var(--blue);">KSh 13.2K</div>
-                <div class="msub mup">↑ 4% vs Q4</div>
+                <div class="mval" style="color:var(--blue);" id="a-stat-avgrent">---</div>
+                <div class="msub">No data yet</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Avg. days to fill</div>
-                <div class="mval">8.3 days</div>
-                <div class="msub mup">↓ 1.2 better</div>
+                <div class="mval" id="a-stat-filltime">---</div>
+                <div class="msub">No data yet</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Churn rate</div>
-                <div class="mval" style="color:var(--red);">6.1%</div>
-                <div class="msub mdn">↑ 0.8% worse</div>
+                <div class="mval" style="color:var(--red);" id="a-stat-churn">---</div>
+                <div class="msub">No data yet</div>
               </div>
             </div>
             <div class="dcardf">
@@ -3903,19 +3514,19 @@
             <div class="mrow">
               <div class="mc">
                 <div class="mlbl">Total tenants</div>
-                <div class="mval" style="color:var(--blue);">112</div>
+                <div class="mval" id="a-stat-tenants" style="color:var(--blue);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Total landlords</div>
-                <div class="mval" style="color:var(--green);">36</div>
+                <div class="mval" id="a-stat-landlords" style="color:var(--green);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Pending verification</div>
-                <div class="mval" style="color:var(--amber);">3</div>
+                <div class="mval" id="a-stat-pending" style="color:var(--amber);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Suspended</div>
-                <div class="mval" style="color:var(--red);">2</div>
+                <div class="mval" id="a-stat-suspended" style="color:var(--red);">0</div>
               </div>
             </div>
             <div class="dcardf">
@@ -3957,19 +3568,19 @@
             <div class="mrow">
               <div class="mc">
                 <div class="mlbl">Total listings</div>
-                <div class="mval" style="color:var(--blue);">89</div>
+                <div class="mval" id="a-stat-listings-list" style="color:var(--blue);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Available</div>
-                <div class="mval" style="color:var(--green);">63</div>
+                <div class="mval" id="a-stat-avail" style="color:var(--green);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Pending approval</div>
-                <div class="mval" style="color:var(--amber);">2</div>
+                <div class="mval" id="a-stat-lpending" style="color:var(--amber);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Occupied</div>
-                <div class="mval">24</div>
+                <div class="mval" id="a-stat-occ">0</div>
               </div>
             </div>
             <div class="dcardf">
@@ -3998,20 +3609,20 @@
           <div class="dsec" id="sec-a-payments">
             <div class="mrow">
               <div class="mc">
-                <div class="mlbl">Collected (Mar)</div>
-                <div class="mval" style="color:var(--green);">KSh 744K</div>
+                <div class="mlbl">Collected (Month)</div>
+                <div class="mval" id="a-stat-rev-coll" style="color:var(--green);">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Pending</div>
-                <div class="mval" style="color:var(--amber);">KSh 48K</div>
+                <div class="mval" id="a-stat-rev-pend" style="color:var(--amber);">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Overdue</div>
-                <div class="mval" style="color:var(--red);">KSh 12K</div>
+                <div class="mval" id="a-stat-rev-over" style="color:var(--red);">KSh 0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Disputes</div>
-                <div class="mval" style="color:var(--red);">1</div>
+                <div class="mval" id="a-stat-rev-disp" style="color:var(--red);">0</div>
               </div>
             </div>
             <div class="dcardf">
@@ -4026,38 +3637,10 @@
                     <th>Property</th>
                     <th>Amount</th>
                     <th>Method</th>
-                    <th>Ref</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+                <tbody id="a-payment-tbody">
                   <tr>
-                    <td style="font-weight:500;">Grace Wanjiku</td>
-                    <td style="color:var(--g500);">Sunrise 3B</td>
-                    <td style="font-weight:600;color:var(--blue);">KSh 12,000</td>
-                    <td><span class="badge bg">M-Pesa</span></td>
-                    <td style="font-size:10px;color:var(--g500);">MP2503001</td>
-                    <td style="color:var(--g500);">1 Mar 2025</td>
-                    <td><span class="badge bg">Paid</span></td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">Peter Otieno</td>
-                    <td style="color:var(--g500);">Lake View</td>
-                    <td style="font-weight:600;color:var(--blue);">KSh 45,000</td>
-                    <td><span class="badge bb">Card</span></td>
-                    <td style="font-size:10px;color:var(--g500);">CD2503044</td>
-                    <td style="color:var(--g500);">2 Mar 2025</td>
-                    <td><span class="badge bg">Paid</span></td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">David Mwangi</td>
-                    <td style="color:var(--g500);">Kongoni B4</td>
-                    <td style="font-weight:600;color:var(--blue);">KSh 8,500</td>
-                    <td style="color:var(--g500);">—</td>
-                    <td style="font-size:10px;color:var(--g500);">—</td>
-                    <td style="color:var(--g500);">Due 1 Mar</td>
-                    <td><span class="badge ba">Disputed</span></td>
+                    <td colspan="7" style="text-align:center;padding:40px;color:var(--g500);">Loading system
+                      transactions...</td>
                   </tr>
                 </tbody>
               </table>
@@ -4068,19 +3651,19 @@
             <div class="mrow">
               <div class="mc">
                 <div class="mlbl">Total open</div>
-                <div class="mval" style="color:var(--amber);">7</div>
+                <div class="mval" id="a-stat-maint" style="color:var(--amber);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">Urgent</div>
-                <div class="mval" style="color:var(--red);">2</div>
+                <div class="mval" id="a-stat-murg" style="color:var(--red);">0</div>
               </div>
               <div class="mc">
                 <div class="mlbl">In progress</div>
-                <div class="mval" style="color:var(--blue);">3</div>
+                <div class="mval" id="a-stat-mip" style="color:var(--blue);">0</div>
               </div>
               <div class="mc">
-                <div class="mlbl">Resolved (Mar)</div>
-                <div class="mval" style="color:var(--green);">14</div>
+                <div class="mlbl">Resolved</div>
+                <div class="mval" id="a-stat-mres" style="color:var(--green);">0</div>
               </div>
             </div>
             <div class="dcardf">
@@ -4096,73 +3679,9 @@
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="a-maint-tbody">
                   <tr>
-                    <td style="font-weight:500;">Grace Wanjiku</td>
-                    <td style="color:var(--g500);">Sunrise 3B</td>
-                    <td>Leaking tap</td>
-                    <td><span class="badge ba">Medium</span></td>
-                    <td><span class="badge ba">In Progress</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="aMaintAction('Assign', 1)">Assign</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('View', 1)">View</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('Edit', 1)">Edit</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="aMaintAction('Delete', 1)">Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">Grace Wanjiku</td>
-                    <td style="color:var(--g500);">Sunrise 3B</td>
-                    <td>Pest control</td>
-                    <td><span class="badge br">High</span></td>
-                    <td><span class="badge bb">Pending</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="aMaintAction('Assign', 2)">Assign</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('View', 2)">View</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('Edit', 2)">Edit</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="aMaintAction('Delete', 2)">Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">Faith Njeri</td>
-                    <td style="color:var(--g500);">Nakuru 2A</td>
-                    <td>AC not cooling</td>
-                    <td><span class="badge br">High</span></td>
-                    <td><span class="badge bb">Pending</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="aMaintAction('Assign', 3)">Assign</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('View', 3)">View</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('Edit', 3)">Edit</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="aMaintAction('Delete', 3)">Del</button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight:500;">Peter Otieno</td>
-                    <td style="color:var(--g500);">Lake View</td>
-                    <td>Gate broken</td>
-                    <td><span class="badge ba">Medium</span></td>
-                    <td><span class="badge ba">In Progress</span></td>
-                    <td>
-                      <div style="display:flex;gap:4px;">
-                        <button class="btn bs bxs" onclick="aMaintAction('Update', 4)">Update</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('View', 4)">View</button>
-                        <button class="btn bs bxs" onclick="aMaintAction('Edit', 4)">Edit</button>
-                        <button class="btn bxs"
-                          style="color:var(--red);border:1px solid var(--red);background:transparent;"
-                          onclick="aMaintAction('Delete', 4)">Del</button>
-                      </div>
+                    <td colspan="6" style="text-align:center;padding:40px;color:var(--g500);">Loading system issues...
                     </td>
                   </tr>
                 </tbody>
@@ -4211,6 +3730,55 @@
             </div>
           </div>
 
+          <div class="dsec" id="sec-a-cms">
+            <div class="dc2">
+              <div class="dcard">
+                <div class="dct">Contact Details</div>
+                <div
+                  style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">
+                  Public Contacts</div>
+                <div class="df"><label class="dfl">Support Email</label><input type="email" id="cms-cfg-email"
+                    value="support@marshalrentals.co.ke"></div>
+                <div class="df"><label class="dfl">Phone Number</label><input type="tel" id="cms-cfg-phone"
+                    value="+254 700 000 000"></div>
+                <div class="df"><label class="dfl">Office Address</label><input type="text" id="cms-cfg-address"
+                    value="Nairobi, Kenya"></div>
+
+                <div class="dct" style="margin-top:24px;">Listing Filters</div>
+                <div
+                  style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">
+                  Available Categories (Comma Separated)</div>
+                <div class="df"><label class="dfl">Property Types</label><input type="text" id="cms-cfg-types"
+                    value="House, Apartment, Studio, Villa, Commercial"></div>
+                <div class="df"><label class="dfl">Supported Locations</label><input type="text" id="cms-cfg-locations"
+                    value="Nairobi, Mombasa, Kisumu, Nakuru, Eldoret"></div>
+              </div>
+              <div class="dcard">
+                <div class="dct">Site Text & Content</div>
+                <div
+                  style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">
+                  Homepage Hero</div>
+                <div class="df"><label class="dfl">Hero Headline</label><input type="text" id="cms-cfg-hero-headline"
+                    value="Find your perfect home in Kenya."></div>
+                <div class="df"><label class="dfl">Hero Subtext</label><textarea id="cms-cfg-hero-sub" rows="3"
+                    style="width:100%;resize:vertical;">Discover thousands of rental properties curated for you. The smartest way to rent.</textarea>
+                </div>
+
+                <div class="dct" style="margin-top:24px;">Blog & Announcements</div>
+                <div
+                  style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;">
+                  Manage Posts</div>
+                <div class="df"><label class="dfl">Latest Announcement Title</label><input type="text"
+                    id="cms-cfg-blog-title" value="New Feature: Online Payments"></div>
+                <div class="df"><label class="dfl">Announcement Link (URL)</label><input type="url"
+                    id="cms-cfg-blog-url" value="https://marshalrentals.co.ke/blog/online-payments"></div>
+
+                <button class="btn br-btn" style="width:100%;margin-top:20px;" onclick="aSaveCMS(this)">Save
+                  Content</button>
+              </div>
+            </div>
+          </div>
+
           <div class="dsec" id="sec-a-settings">
             <div class="dc2">
               <div class="dcard">
@@ -4254,13 +3822,16 @@
               </div>
               <div class="dcard">
                 <div class="dct">Platform info</div>
-                <div class="df"><label class="dfl">Platform name</label><input type="text" value="Marshal Rentals">
+                <div class="df"><label class="dfl">Platform name</label><input type="text" id="a-cfg-name"
+                    value="Marshal Rentals">
                 </div>
-                <div class="df"><label class="dfl">Admin email</label><input type="email"
+                <div class="df"><label class="dfl">Admin email</label><input type="email" id="a-cfg-email"
                     value="admin@marshalrentals.co.ke"></div>
-                <div class="df"><label class="dfl">WhatsApp business number</label><input type="tel"
+                <div class="df"><label class="dfl">WhatsApp business number</label><input type="tel" id="a-cfg-whatsapp"
                     value="+254 700 000 000"></div>
-                <div class="df"><label class="dfl">Default currency</label><select>
+                <div class="df"><label class="dfl">Office address</label><input type="text" id="a-cfg-address"
+                    value="Naivasha CBD, Nakuru County, Kenya"></div>
+                <div class="df"><label class="dfl">Default currency</label><select id="a-cfg-currency">
                     <option>KES — Kenyan Shilling</option>
                   </select></div>
                 <button class="btn br-btn" style="width:100%;margin-top:4px;" onclick="aSaveSettings(this)">Save
@@ -4300,7 +3871,7 @@
                   <span style="font-size:13px;color:var(--g500);">Manage the Contact page phone, email, office and
                     hours
                     info shown to visitors.</span>
-                  <button class="btn bp bsm" onclick="cmsOpenModal('contact','add')">+ Add contact item</button>
+                  <button class="btn bp bsm" onclick="aAddConfig('Contact')">+ Add contact item</button>
                 </div>
                 <table class="dtbl" id="contact-table">
                   <thead>
@@ -4321,7 +3892,7 @@
                   <span style="font-size:13px;color:var(--g500);">Manage blog articles shown on the Insights &amp;
                     Tips
                     page.</span>
-                  <button class="btn bp bsm" onclick="cmsOpenModal('blog','add')">+ Add blog post</button>
+                  <button class="btn bp bsm" onclick="aAddBlog()">+ Add blog post</button>
                 </div>
                 <table class="dtbl" id="blog-table">
                   <thead>
@@ -4341,7 +3912,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
                   <span style="font-size:13px;color:var(--g500);">Manage hero headings, hero stats, and footer text
                     shown on the homepage.</span>
-                  <button class="btn bp bsm" onclick="cmsOpenModal('sitetext','add')">+ Add text block</button>
+                  <button class="btn bp bsm" onclick="aAddConfig('Hero')">+ Add text block</button>
                 </div>
                 <table class="dtbl" id="sitetext-table">
                   <thead>
@@ -4361,7 +3932,7 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
                   <span style="font-size:13px;color:var(--g500);">Manage amenities and checkboxes shown in property
                     filters.</span>
-                  <button class="btn bp bsm" onclick="cmsOpenModal('amenities','add')">+ Add amenity</button>
+                  <button class="btn bp bsm" onclick="aAddAmenity()">+ Add amenity</button>
                 </div>
                 <table class="dtbl" id="amenities-table">
                   <thead>
@@ -4401,41 +3972,7 @@
   </div>
   </div>
   <script>
-    // ========== CMS ENGINE ==========
-    const cmsDB = {
-      contact: [
-        { id: 1, icon: '📞', label: 'Phone', value: '+254 700 000 000' },
-        { id: 2, icon: '✉️', label: 'Email', value: 'info@marshalrentals.co.ke' },
-        { id: 3, icon: '📍', label: 'Office', value: 'Naivasha CBD, Nakuru County' },
-        { id: 4, icon: '⏰', label: 'Hours', value: 'Mon – Sat: 8am – 6pm' }
-      ],
-      blog: [
-        { id: 1, category: 'Renting Tips', catColor: '#185FA5', title: '5 things to check before renting in Naivasha', date: 'March 2025', read: '4 min read' },
-        { id: 2, category: 'Market Insight', catColor: '#0F6E56', title: 'Nakuru real estate trends in 2025', date: 'Feb 2025', read: '6 min read' },
-        { id: 3, category: 'Landlord Guide', catColor: '#C48B25', title: 'How to price your rental competitively', date: 'Jan 2025', read: '5 min read' },
-        { id: 4, category: 'Legal', catColor: '#B83C65', title: 'Tenant rights in Kenya — what you need to know', date: 'Dec 2024', read: '7 min read' },
-        { id: 5, category: 'Lifestyle', catColor: '#258F69', title: 'Best estates to live in around Lake Naivasha', date: 'Nov 2024', read: '5 min read' },
-        { id: 6, category: 'Technology', catColor: '#4B44A6', title: 'Why mobile-first platforms win in Kenya', date: 'Oct 2024', read: '4 min read' }
-      ],
-      sitetext: [
-        { id: 1, section: 'Hero', key: 'Main heading', value: "Find Your Perfect Home in Kenya's Rift Valley" },
-        { id: 2, section: 'Hero', key: 'Subtitle tagline', value: 'Browse verified listings. Book securely. Move in with confidence.' },
-        { id: 3, section: 'Stats', key: 'Verified listings', value: '300+' },
-        { id: 4, section: 'Stats', key: 'Happy tenants', value: '150+' },
-        { id: 5, section: 'Stats', key: 'Landlords', value: '36+' },
-        { id: 6, section: 'Footer', key: 'About bio', value: 'Connecting verified landlords with quality tenants across Naivasha, Nakuru, and the Rift Valley. Est. 2024.' },
-        { id: 7, section: 'Footer', key: 'Contact Email', value: 'info@marshalrentals.co.ke' },
-        { id: 8, section: 'Footer', key: 'Contact Location', value: 'Naivasha CBD, Nakuru County, Kenya' }
-      ],
-      amenities: [
-        { id: 1, name: 'WiFi included', icon: '📶', status: 'Active' },
-        { id: 2, name: '24hr water', icon: '💧', status: 'Active' },
-        { id: 3, name: 'Security / CCTV', icon: '🛡️', status: 'Active' },
-        { id: 4, name: 'Parking', icon: '🚗', status: 'Active' },
-        { id: 5, name: 'Furnished', icon: '🛋️', status: 'Active' }
-      ]
-    };
-    let cmsNextId = { contact: 10, blog: 20, sitetext: 30, amenities: 10 };
+    // ========== CMS ENGINE (SUPABASE CONNECTED) ==========
     let cmsActiveTab = 'contact';
     let cmsEditId = null;
 
@@ -4449,196 +3986,11 @@
       btn.style.color = 'var(--blue)'; btn.style.borderBottomColor = 'var(--blue)';
     }
 
-    function cmsRender() {
-      // Contact
-      const cb = document.getElementById('contact-tbody');
-      if (cb) cb.innerHTML = cmsDB.contact.map(r => `
-    <tr>
-      <td style="font-size:18px;">${r.icon}</td>
-      <td style="font-weight:500;">${r.label}</td>
-      <td style="color:var(--g500);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.value}</td>
-      <td><div style="display:flex;gap:4px;">
-        <button class="btn bs bxs" onclick="cmsOpenModal('contact','view',${r.id})">View</button>
-        <button class="btn bs bxs" onclick="cmsOpenModal('contact','edit',${r.id})">Edit</button>
-        <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="cmsDel('contact',${r.id})">Del</button>
-      </div></td>
-    </tr>`).join('');
-      // Blog
-      const bb = document.getElementById('blog-tbody');
-      if (bb) bb.innerHTML = cmsDB.blog.map(r => `
-    <tr>
-      <td><span class="badge" style="background:#F5F5F5;color:${r.catColor};font-weight:600;">${r.category}</span></td>
-      <td style="font-weight:500;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.title}</td>
-      <td style="color:var(--g500);font-size:12px;">${r.date} · ${r.read}</td>
-      <td><div style="display:flex;gap:4px;">
-        <button class="btn bs bxs" onclick="cmsOpenModal('blog','view',${r.id})">View</button>
-        <button class="btn bs bxs" onclick="cmsOpenModal('blog','edit',${r.id})">Edit</button>
-        <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="cmsDel('blog',${r.id})">Del</button>
-      </div></td>
-    </tr>`).join('');
-      // SiteText
-      const sb = document.getElementById('sitetext-tbody');
-      const sectionColors = { Hero: 'bb', Stats: 'bg', Footer: 'ba' };
-      if (sb) sb.innerHTML = cmsDB.sitetext.map(r => `
-    <tr>
-      <td><span class="badge ${sectionColors[r.section] || 'bb'}">${r.section}</span></td>
-      <td style="font-weight:500;">${r.key}</td>
-      <td style="color:var(--g500);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.value}</td>
-      <td><div style="display:flex;gap:4px;">
-        <button class="btn bs bxs" onclick="cmsOpenModal('sitetext','view',${r.id})">View</button>
-        <button class="btn bs bxs" onclick="cmsOpenModal('sitetext','edit',${r.id})">Edit</button>
-        <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="cmsDel('sitetext',${r.id})">Del</button>
-      </div></td>
-    </tr>`).join('');
-
-      // AMENITIES
-      const ab = document.getElementById('amenities-tbody');
-      if (ab) ab.innerHTML = cmsDB.amenities.map(r => `
-    <tr>
-      <td style="font-size:18px;">${r.icon}</td>
-      <td style="font-weight:500;">${r.name}</td>
-      <td><span class="badge ${r.status === 'Active' ? 'bg' : 'br'}">${r.status}</span></td>
-      <td><div style="display:flex;gap:4px;">
-        <button class="btn bs bxs" onclick="cmsOpenModal('amenities','view',${r.id})">View</button>
-        <button class="btn bs bxs" onclick="cmsOpenModal('amenities','edit',${r.id})">Edit</button>
-        <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="cmsDel('amenities',${r.id})">Del</button>
-      </div></td>
-    </tr>`).join('');
-
-      // Public filter sidebar reflection
-      const publicFilters = document.getElementById('filter-amenities');
-      if (publicFilters) {
-        publicFilters.innerHTML = cmsDB.amenities.filter(a => a.status === 'Active').map(a => `
-        <label class="cbrow"><input type="checkbox"> ${a.name}</label>`).join('');
-      }
-    }
-
-    function cmsDel(type, id) {
-      showModal('Delete Content?', `<p>Are you sure you want to delete this ${type} item? This action cannot be undone.</p>`,
-        `<button class="btn" style="flex:1;background:var(--red);color:#fff;" onclick="cmsConfirmDel('${type}',${id})">Yes, Delete</button>
-         <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
-      );
-    }
-    function cmsConfirmDel(type, id) {
-      cmsDB[type] = cmsDB[type].filter(r => r.id !== id);
-      cmsRender();
-      cmsCloseModal();
-      toast('🗑️ Item deleted successfully.', true);
-    }
-
-    function cmsOpenModal(type, mode, id) {
-      const modal = document.getElementById('cms-modal');
-      const title = document.getElementById('cms-modal-title');
-      const body = document.getElementById('cms-modal-body');
-      const actions = document.getElementById('cms-modal-actions');
-      cmsEditId = id || null;
-      modal.style.display = 'flex';
-
-      const item = id ? cmsDB[type].find(r => r.id === id) : null;
-
-      const inp = (lbl, val, name, type2 = 'text', xtra = '') => `
-    <div style="margin-bottom:12px;">
-      <label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">${lbl}</label>
-      <input type="${type2}" id="cms-inp-${name}" value="${val || ''}" ${xtra} style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:var(--rmd);font-size:14px;font-family:var(--fb);">
-    </div>`;
-
-      if (type === 'contact') {
-        title.textContent = mode === 'add' ? 'Add Contact Item' : mode === 'edit' ? 'Edit Contact Item' : 'View Contact Item';
-        body.innerHTML = mode === 'view' ? `
-      <div style="background:var(--g50);border-radius:var(--rmd);padding:16px;">
-        <div style="font-size:28px;margin-bottom:8px;">${item.icon}</div>
-        <div style="font-weight:600;font-size:15px;">${item.label}</div>
-        <div style="color:var(--g500);margin-top:6px;">${item.value}</div>
-      </div>` :
-          inp('Icon (emoji)', 'contact' === 'x' ? '' : item ? item.icon : '📞', 'icon') +
-          inp('Label', item ? item.label : '', 'label') +
-          inp('Value', item ? item.value : '', 'value');
-        actions.innerHTML = mode === 'view' ? `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>` :
-          `<button class="btn bp" style="flex:1;" onclick="cmsSave('contact','${mode}')">Save</button>
-       <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`;
-      } else if (type === 'blog') {
-        title.textContent = mode === 'add' ? 'Add Blog Post' : mode === 'edit' ? 'Edit Blog Post' : 'View Blog Post';
-        body.innerHTML = mode === 'view' ? `
-      <div style="background:var(--g50);border-radius:var(--rmd);padding:16px;">
-        <div style="font-weight:600;font-size:13px;color:${item.catColor};margin-bottom:6px;">${item.category}</div>
-        <div style="font-weight:700;font-size:16px;margin-bottom:10px;line-height:1.4;">${item.title}</div>
-        <div style="font-size:12px;color:var(--g500);">${item.date} · ${item.read}</div>
-      </div>` :
-          inp('Category (e.g. Renting Tips)', item ? item.category : '', 'category') +
-          inp('Category Color (hex)', item ? item.catColor : '#185FA5', 'catColor') +
-          inp('Title', item ? item.title : '', 'title') +
-          inp('Date (e.g. March 2025)', item ? item.date : '', 'date') +
-          inp('Read time (e.g. 4 min read)', item ? item.read : '', 'read');
-        actions.innerHTML = mode === 'view' ? `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>` :
-          `<button class="btn bp" style="flex:1;" onclick="cmsSave('blog','${mode}')">Save</button>
-       <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`;
-      } else if (type === 'sitetext') {
-        title.textContent = mode === 'add' ? 'Add Text Block' : mode === 'edit' ? 'Edit Text Block' : 'View Text Block';
-        body.innerHTML = mode === 'view' ? `
-      <div style="background:var(--g50);border-radius:var(--rmd);padding:16px;">
-        <div style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;margin-bottom:4px;">${item.section} · ${item.key}</div>
-        <div style="font-size:15px;line-height:1.6;">${item.value}</div>
-      </div>` :
-          `<div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Section</label>
-        <select id="cms-inp-section" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:var(--rmd);font-size:14px;font-family:var(--fb);">
-          <option ${item && item.section === 'Hero' ? 'selected' : ''}>Hero</option>
-          <option ${item && item.section === 'Stats' ? 'selected' : ''}>Stats</option>
-          <option ${item && item.section === 'Footer' ? 'selected' : ''}>Footer</option>
-        </select>
-      </div>` +
-          inp('Key (e.g. Main heading)', item ? item.key : '', 'key') +
-          inp('Value', item ? item.value : '', 'value');
-        actions.innerHTML = mode === 'view' ? `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>` :
-          `<button class="btn bp" style="flex:1;" onclick="cmsSave('sitetext','${mode}')">Save</button>
-       <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`;
-      } else if (type === 'amenities') {
-        title.textContent = mode === 'add' ? 'Add Amenity' : mode === 'edit' ? 'Edit Amenity' : 'View Amenity';
-        body.innerHTML = mode === 'view' ? `
-      <div style="background:var(--g50);border-radius:var(--rmd);padding:16px;">
-        <div style="font-size:28px;margin-bottom:8px;">${item.icon}</div>
-        <div style="font-weight:600;font-size:15px;">${item.name}</div>
-        <div style="color:var(--g500);margin-top:6px;">Status: ${item.status}</div>
-      </div>` :
-          inp('Icon (emoji)', item ? item.icon : '✨', 'icon') +
-          inp('Amenity Name', item ? item.name : '', 'name') +
-          `<div style="margin-bottom:12px;">
-         <label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Status</label>
-         <select id="cms-inp-status" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:var(--rmd);font-size:14px;font-family:var(--fb);">
-           <option ${item && item.status === 'Active' ? 'selected' : ''}>Active</option>
-           <option ${item && item.status === 'Hidden' ? 'selected' : ''}>Hidden</option>
-         </select>
-       </div>`;
-        actions.innerHTML = mode === 'view' ? `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>` :
-          `<button class="btn bp" style="flex:1;" onclick="cmsSave('amenities','${mode}')">Save</button>
-       <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`;
-      }
-    }
-
-    function cmsSave(type, mode) {
-      const g = id => document.getElementById('cms-inp-' + id)?.value?.trim() || '';
-      let obj = {};
-      if (type === 'contact') obj = { id: cmsEditId || cmsNextId[type]++, icon: g('icon') || '📋', label: g('label'), value: g('value') };
-      else if (type === 'blog') obj = { id: cmsEditId || cmsNextId[type]++, category: g('category'), catColor: g('catColor') || '#185FA5', title: g('title'), date: g('date'), read: g('read') };
-      else if (type === 'sitetext') {
-        const sec = document.getElementById('cms-inp-section')?.value || 'Hero';
-        obj = { id: cmsEditId || cmsNextId[type]++, section: sec, key: g('key'), value: g('value') };
-      }
-      else if (type === 'amenities') {
-        const stat = document.getElementById('cms-inp-status')?.value || 'Active';
-        obj = { id: cmsEditId || cmsNextId[type]++, name: g('name'), icon: g('icon') || '✨', status: stat };
-      }
-      if (mode === 'add') { cmsDB[type].push(obj); toast('✅ Item added!', true); }
-      else { const idx = cmsDB[type].findIndex(r => r.id === cmsEditId); if (idx > -1) { cmsDB[type][idx] = obj; toast('✅ Changes saved!', true); } }
-      cmsRender();
-      cmsCloseModal();
-    }
-
     function cmsCloseModal() {
       document.getElementById('cms-modal').style.display = 'none';
     }
     document.getElementById('cms-modal')?.addEventListener('click', function (e) { if (e.target === this) cmsCloseModal(); });
-    cmsRender();
+  </script>
   </script>
   <script>
 
@@ -4706,7 +4058,7 @@
       'l-msgs': 'Messages', 'l-docs': 'Documents', 'l-settings': 'Settings',
       'a-dash': 'Dashboard', 'a-analytics': 'Analytics', 'a-users': 'Users',
       'a-listings': 'Listings', 'a-payments': 'Payments', 'a-maint': 'Maintenance',
-      'a-reports': 'Reports', 'a-settings': 'Settings'
+      'a-reports': 'Reports', 'a-cms': 'Content Management', 'a-settings': 'Settings'
     };
     function ds(dash, sec, el) {
       const pg = document.getElementById('page-' + dash);
@@ -4730,14 +4082,8 @@
     }
     // ---- FAQ ----
     const FAQS = [
-      { q: 'How do I book a property?', a: 'Browse properties, click "View Details", choose your move-in date and duration, then click "Book Now". You can also contact the landlord directly via WhatsApp before booking.' },
-      { q: 'How do I list my property?', a: 'Register as a Landlord, go to your dashboard, and click "Add property". Fill in property details, upload photos, and set your price. Your listing goes live after a quick verification check.' },
-      { q: "What payment methods are accepted?", a: 'We support M-Pesa, Airtel Money, and debit/credit cards. All payments are secured and receipted instantly to your registered number or email.' },
-      { q: 'Are landlords verified?', a: 'Yes. Every landlord goes through an ID verification process before their listings go live. Verified landlords display a green check badge on their profile.' },
-      { q: 'Is there a fee to use Marshal Rentals?', a: 'Browsing and contacting landlords is free for tenants. Landlords get their first listing free. Premium packages are available for higher visibility.' },
-      { q: "Can I find properties outside Naivasha?", a: "Currently we cover Naivasha, Nakuru, Maai Mahiu, Kongoni, and Hell's Gate. We're expanding to more areas — subscribe for updates." },
-      { q: 'How does the WhatsApp button work?', a: 'Clicking WhatsApp on a listing opens a pre-filled WhatsApp chat with the landlord. This is the fastest way to enquire in Kenya.' },
-      { q: 'What if I have a maintenance issue?', a: 'Log in to your tenant dashboard, go to Maintenance, describe the issue and select urgency. Your landlord is notified instantly.' }
+      { q: 'How do I book a property?', a: 'Browse properties, click "View Details", and choose your move-in date.' },
+      { q: 'How do I list my property?', a: 'Register as a Landlord and click "Add property" in your dashboard.' }
     ];
     (function buildFAQs() {
       const w = document.getElementById('faq-wrap');
@@ -4958,21 +4304,16 @@
   <!-- ===== DOCUMENT MANAGEMENT ENGINE ===== -->
   <script>
     // ---- SHARED DOCUMENT DATABASE ----
-    const docDB = [
-      { id: 1, icon: '📋', name: 'Tenancy Agreement — Jan 2025', size: 'PDF · 342 KB', date: 'Jan 2025', type: 'Active', tenant: 'Grace Wanjiku', tenantUnit: 'Sunrise 3B' },
-      { id: 2, icon: '🧾', name: 'Rent Receipt — March 2025', size: 'PDF · 58 KB', date: 'Mar 2025', type: 'Receipt', tenant: 'Grace Wanjiku', tenantUnit: 'Sunrise 3B' },
-      { id: 3, icon: '🧾', name: 'Rent Receipt — February 2025', size: 'PDF · 58 KB', date: 'Feb 2025', type: 'Receipt', tenant: 'Grace Wanjiku', tenantUnit: 'Sunrise 3B' },
-      { id: 4, icon: '📝', name: 'Deposit Receipt — Dec 2024', size: 'PDF · 61 KB', date: 'Dec 2024', type: 'Deposit', tenant: 'Grace Wanjiku', tenantUnit: 'Sunrise 3B' },
-      { id: 5, icon: '📋', name: 'Tenancy Agreement — Mar 2025', size: 'PDF · 330 KB', date: 'Mar 2025', type: 'Active', tenant: 'Peter Otieno', tenantUnit: 'Lake View Villa' },
-      { id: 6, icon: '📝', name: 'Lease Renewal Notice', size: 'PDF · 120 KB', date: 'Mar 2025', type: 'Pending', tenant: 'Peter Otieno', tenantUnit: 'Lake View Villa' },
-    ];
-    let docNextId = 20;
+    const docDB = [];
+    let docNextId = 1;
     const docStatusClass = { Active: 'bg', Receipt: 'bb', Deposit: 'bgr', Pending: 'ba', Inactive: 'br' };
 
     function renderTDocs() {
       const tb = document.getElementById('t-doc-tbody');
       if (!tb) return;
-      const myDocs = docDB.filter(d => d.tenant === 'Grace Wanjiku');
+      // Filter docs by logged-in user's email or name
+      const currentUser = window.CURRENT_USER_NAME || '';
+      const myDocs = currentUser ? docDB.filter(d => d.tenant === currentUser) : docDB;
       tb.innerHTML = myDocs.length === 0
         ? '<tr><td colspan="5" style="text-align:center;color:var(--g500);padding:20px;">No documents yet.</td></tr>'
         : myDocs.map(d => `
@@ -5110,7 +4451,7 @@
       const doc = {
         id: docNextId++, icon: '📎', name: f.name, size: `${f.type.split('/')[1]?.toUpperCase() || 'FILE'} · ${sizeKB} KB`,
         date: new Date().toLocaleDateString('en-KE', { month: 'short', year: 'numeric' }),
-        type: 'Pending', tenant: 'Grace Wanjiku', tenantUnit: 'Sunrise 3B'
+        type: 'Pending', tenant: window.CURRENT_USER_NAME || 'Tenant', tenantUnit: 'My Unit'
       };
       docDB.push(doc);
       renderTDocs();
@@ -5121,44 +4462,87 @@
 
     // ---- LANDLORD UPLOAD ----
     function lDocUpload() { document.getElementById('l-doc-inp')?.click(); }
-    function lDocFileSelected(inp) {
+    async function lDocFileSelected(inp) {
       if (!inp.files || !inp.files[0]) return;
       const f = inp.files[0];
       const sizeKB = Math.round(f.size / 1024);
+
+      try {
+        toast('⏳ Syncing tenant records...', true);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Fetch properties occupied by tenants (using new tenant_id linkage)
+        const { data: props, error } = await supabase.from('listings')
+          .select(`*, tenant:tenant_id(name)`)
+          .eq('landlord_id', user.id)
+          .eq('status', 'Occupied');
+
+        if (error) {
+          // Robust fallback: if join fails, just fetch the occupied listings
+          const { data: fallback } = await supabase.from('listings').select('*').eq('landlord_id', user.id).eq('status', 'Occupied');
+          renderDocModal(f, sizeKB, fallback || []);
+          return;
+        }
+        renderDocModal(f, sizeKB, props || []);
+      } catch (err) {
+        toast('❌ Sync Error: ' + err.message, false);
+      } finally {
+        inp.value = '';
+      }
+    }
+
+    function renderDocModal(f, sizeKB, props) {
       showModal('Assign Document to Tenant',
         `<div style="background:var(--g50);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;">
-      <div style="font-weight:600;">${f.name}</div>
-      <div style="color:var(--g500);font-size:12px;">${Math.round(f.size / 1024)} KB</div>
-    </div>
-    <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Assign to tenant</label>
-    <select id="ldoc-tenant" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
-      <option value="Grace Wanjiku|Sunrise 3B">Grace Wanjiku — Sunrise 3B</option>
-      <option value="Peter Otieno|Lake View Villa">Peter Otieno — Lake View Villa</option>
-      <option value="David Mwangi|Kongoni B4">David Mwangi — Kongoni B4</option>
-    </select></div>
-    <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Document type</label>
-    <select id="ldoc-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
-      <option>Active</option><option>Receipt</option><option>Deposit</option><option>Pending</option>
-    </select></div>`,
+       <div style="font-weight:600;">${f.name}</div>
+       <div style="color:var(--g500);font-size:12px;">${sizeKB} KB</div>
+     </div>
+     <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Assign to tenant</label>
+     <select id="ldoc-tenant" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
+       <option value="">-- Select a Tenant --</option>
+       ${props.map(p => `
+           <option value="${p.id}|${p.tenant?.name || 'Active Tenant'}">${p.tenant?.name || 'Active Tenant'} (${p.title})</option>
+       `).join('')}
+       ${props.length === 0 ? '<option disabled>No occupied properties found</option>' : ''}
+     </select></div>
+     <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Document type</label>
+     <select id="ldoc-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
+       <option>Active</option><option>Receipt</option><option>Deposit</option><option>Contract</option>
+     </select></div>`,
         `<button class="btn bp" style="flex:1;" onclick="lDocConfirmUpload('${f.name}',${sizeKB})">Upload &amp; Assign</button>
-     <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
+      <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
       );
-      inp.value = '';
     }
-    function lDocConfirmUpload(fname, sizeKB) {
-      const sel = document.getElementById('ldoc-tenant')?.value || 'Grace Wanjiku|Sunrise 3B';
-      const parts = sel.split('|');
+
+    async function lDocConfirmUpload(fname, sizeKB) {
+      const sel = document.getElementById('ldoc-tenant')?.value || '';
+      if (!sel) { toast('⚠️ Please select a tenant first.', false); return; }
+
+      const [propId, tName] = sel.split('|');
       const typ = document.getElementById('ldoc-type')?.value || 'Active';
-      const doc = {
-        id: docNextId++, icon: '📎', name: fname, size: `FILE · ${sizeKB} KB`,
-        date: new Date().toLocaleDateString('en-KE', { month: 'short', year: 'numeric' }),
-        type: typ, tenant: parts[0] || 'Grace Wanjiku', tenantUnit: parts[1] || 'Sunrise 3B'
-      };
-      docDB.push(doc);
-      cmsCloseModal();
-      renderTDocs();
-      renderLDocs();
-      toast('✅ Document uploaded and assigned to ' + parts[0] + '!', true);
+
+      try {
+        toast('⏳ Assigning document...', true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not logged in');
+
+        const { error } = await supabase.from('documents').insert([{
+          landlord_id: user.id,
+          name: fname,
+          size: `${sizeKB} KB`,
+          status: typ,
+          url: 'https://placeholder.com', // Future storage wiring
+          created_at: new Date().toISOString()
+        }]);
+
+        if (error) throw error;
+
+        cmsCloseModal();
+        if (typeof fetchLandlordData === 'function') await fetchLandlordData();
+        toast('✅ Document assigned to ' + tName + '!', true);
+      } catch (err) {
+        toast('❌ Sync Error: ' + err.message, false);
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => { renderTDocs(); renderLDocs(); });
@@ -5169,15 +4553,19 @@
 
   <script>
     // Additional render functions for maintenance
-    const maintDB = [
-      { id: 1, issue: 'Leaking tap — bathroom', date: '15 Mar 2025', type: 'Plumbing', status: 'In Progress', icon: '🔧', color: '#FAEEDA' },
-      { id: 2, issue: 'Pest control — kitchen', date: '18 Mar 2025', type: 'Pest Control', status: 'Pending', icon: '🐜', color: '#FCEBEB' },
-      { id: 3, issue: 'Bedroom light not working', date: '10 Mar 2025', type: 'Electrical', status: 'Resolved', icon: '💡', color: '#EAF3DE' }
-    ];
+    const maintDB = [];
 
     function renderTMaint() {
       const list = document.getElementById('t-maint-list');
       if (!list) return;
+      if (maintDB.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--g500);">
+          <div style="font-size:32px;margin-bottom:10px;">🔧</div>
+          <div style="font-weight:500;">No maintenance requests</div>
+          <div style="font-size:12px;margin-top:5px;">Use the form above to submit a new request.</div>
+        </div>`;
+        return;
+      }
       list.innerHTML = maintDB.map(m => `
         <div class="rrow">
           <div class="ric" style="background:${m.color};">${m.icon}</div>
@@ -5192,108 +4580,235 @@
       renderTMaint();
     });
 
-    // ========== PLATFORM ENGINE (DYNAMIC DATA) ==========
-    const platformDB = {
-      listings: [
-        { id: 101, name: 'Sunrise Apts 3B', location: 'Naivasha CBD', type: '1BR', price: 12000, status: 'Available', landlord: 'James Kamau', icon: '🏢' },
-        { id: 102, name: 'Kongoni Area B4', location: 'Kongoni Area', type: 'Bedsitter', price: 8500, status: 'Available', landlord: 'James Kamau', icon: '🏡' },
-        { id: 103, name: 'Hells Gate Villa', location: 'Hell\'s Gate', type: '3BR', price: 45000, status: 'Available', landlord: 'Sarah Njeri', icon: '🏘️' },
-        { id: 104, name: 'Maai Mahiu Studio', location: 'Maai Mahiu', type: 'Bedsitter', price: 7000, status: 'Reserved', landlord: 'Peter King', icon: '🏠' },
-        { id: 105, name: 'Naivasha West High', location: 'Naivasha West', type: '2BR', price: 18000, status: 'Available', landlord: 'James Kamau', icon: '🏢' },
-        { id: 106, name: 'Karagita Bedsitter', location: 'Karagita', type: 'Bedsitter', price: 5500, status: 'Available', landlord: 'James Kamau', icon: '🏘️' }
-      ],
-      users: [
-        { id: 201, name: 'James Kamau', email: 'jkamau@email.com', role: 'Landlord', status: 'Verified', joined: 'Jan 2025' },
-        { id: 202, name: 'Grace Wanjiku', email: 'grace@email.com', role: 'Tenant', status: 'Active', joined: 'Feb 2025' },
-        { id: 203, name: 'Peter Otieno', email: 'peter@email.com', role: 'Tenant', status: 'Pending', joined: 'Mar 2025' },
-        { id: 204, name: 'Sarah Njeri', email: 'sarah@email.com', role: 'Landlord', status: 'Verified', joined: 'Feb 2025' }
-      ]
-    };
+    // ========== PLATFORM ENGINE (SUPABASE DYNAMIC) ==========
+    async function renderAllDynamic() {
+      // 1. PUBLIC GRID & ADMIN LISTINGS
+      let { data: listData, error } = await supabase.from('listings').select('*, profiles(name)');
 
-    function renderAllDynamic() {
-      // 1. PUBLIC GRID
-      const pgrid = document.getElementById('pgrid-main');
-      if (pgrid) {
-        pgrid.innerHTML = platformDB.listings.map(l => `
-          <div class="pcard" onclick="gto('detail')">
-            <div class="pthumb">${l.icon}<div class="pavail"><span class="badge ${l.status === 'Available' ? 'bg' : 'ba'}">${l.status}</span></div></div>
-            <div class="pinfo">
-              <div class="pprice">KSh ${l.price.toLocaleString()}/mo</div>
-              <div class="ploc">📍 ${l.location}</div>
-              <div class="ptags"><span class="badge bb">${l.type}</span><span class="badge bt">Featured</span></div>
-              <button class="btn bp bsm" style="width:100%;margin-top:8px">View details</button>
-            </div>
-          </div>`).join('');
+      // Fallback if the standard join fails due to custom FK names
+      if (error || (listData && listData.length > 0 && !listData[0].profiles)) {
+        const { data: retry } = await supabase.from('listings').select('*, profiles!listings_landlord_id_fkey (name)');
+        if (retry) listData = retry;
       }
+
+      window.PLATFORM_LISTINGS_CACHE = listData || [];
+
+      // Update Global Stats in Admin Dashboard
+      if (listData) {
+        const total = listData.length;
+        const avail = listData.filter(l => l.status === 'Available').length;
+        const occ = listData.filter(l => l.status === 'Occupied' || l.status === 'Unavailable').length;
+        const pend = listData.filter(l => l.status === 'Pending').length;
+
+        ['a-stat-listings-dash', 'a-stat-listings-list'].forEach(id => {
+          if (document.getElementById(id)) document.getElementById(id).textContent = total;
+        });
+        if (document.getElementById('a-stat-avail')) document.getElementById('a-stat-avail').textContent = avail;
+        if (document.getElementById('a-stat-occ')) document.getElementById('a-stat-occ').textContent = occ;
+        if (document.getElementById('a-stat-lpending')) document.getElementById('a-stat-lpending').textContent = pend;
+      }
+
+      // Hydrate Occupancy By Area Analytics Natively
+      if (listData) {
+        const locations = [
+          { keyword: 'naivasha', occId: 'a-occ-naivasha', barId: 'a-bar-naivasha' },
+          { keyword: 'nakuru', occId: 'a-occ-nakuru', barId: 'a-bar-nakuru' },
+          { keyword: 'kongoni', occId: 'a-occ-kongoni', barId: 'a-bar-kongoni' },
+          { keyword: 'hell', occId: 'a-occ-hells', barId: 'a-bar-hells' },
+          { keyword: 'maai', occId: 'a-occ-maai', barId: 'a-bar-maai' }
+        ];
+        locations.forEach(loc => {
+          const areaProps = listData.filter(p => (p.location || '').toLowerCase().includes(loc.keyword));
+          const occProps = areaProps.filter(p => p.status === 'Occupied');
+          const pct = areaProps.length > 0 ? Math.round((occProps.length / areaProps.length) * 100) : 0;
+
+          const occEl = document.getElementById(loc.occId);
+          const barEl = document.getElementById(loc.barId);
+          if (occEl) occEl.textContent = pct + '%';
+          if (barEl) barEl.style.width = pct + '%';
+        });
+      }
+
+      const phome = document.getElementById('pgrid-home');
+      const psearch = document.getElementById('pgrid-search');
+
+      const gridHTML = listData && listData.length > 0 ? listData.map(l => `
+            <div class="pcard" onclick="viewPropertyDetails('${l.id}')">
+              <div class="pthumb" style="${l.image_url ? `background-image: url('${l.image_url}'); background-size: cover; background-position: center;` : ''}">${l.image_url ? '' : '🏢'}<div class="pavail"><span class="badge ${l.status === 'Available' ? 'bg' : 'ba'}">${l.status}</span></div></div>
+              <div class="pinfo">
+                <div class="pprice">KSh ${(l.price || 0).toLocaleString()}/mo</div>
+                <div class="ploc">📍 ${l.location}</div>
+                <div class="ptags"><span class="badge bb">${l.type}</span></div>
+                <button class="btn bp bsm" style="width:100%;margin-top:8px">View details</button>
+              </div>
+            </div>`).join('') : `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--g500);">
+            <div style="font-size:40px;margin-bottom:15px;">🔍</div>
+            <h3>No listings found</h3>
+          </div>`;
+
+      if (phome) phome.innerHTML = gridHTML;
+      if (psearch) psearch.innerHTML = gridHTML;
+
+      const pCountHeader = document.getElementById('prop-count-header');
+      if (pCountHeader) pCountHeader.textContent = listData ? listData.length : 0;
+
+      const lms = document.getElementById('load-more-status');
+      if (lms) lms.textContent = `Showing ${(listData || []).length} of ${(listData || []).length} properties (All properties loaded)`;
 
       // 2. ADMIN USERS
       const utb = document.getElementById('a-users-tbody');
-      if (utb) {
-        utb.innerHTML = platformDB.users.map(u => `
-          <tr>
-            <td><div style="font-weight:500;">${u.name}</div><div style="font-size:10px;color:var(--g500);">Reg: ${u.joined}</div></td>
-            <td style="color:var(--g500);">${u.email}</td>
-            <td><span class="badge ${u.role === 'Admin' ? 'br' : u.role === 'Landlord' ? 'bb' : 'bgr'}">${u.role}</span></td>
-            <td><span class="badge ${u.status === 'Verified' || u.status === 'Active' ? 'bg' : 'ba'}">${u.status}</span></td>
-            <td><div style="display:flex;gap:4px;">
-              <button class="btn bs bxs" onclick="aUserAction('view', ${u.id})">View</button>
-              <button class="btn bs bxs" onclick="aUserAction('edit', ${u.id})">Edit</button>
-              <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="aUserAction('del', ${u.id})">Del</button>
-            </div></td>
-          </tr>`).join('');
+      const { data: userData } = await supabase.from('profiles').select('*');
+
+      if (utb && userData) {
+        if (userData.length === 0) {
+          utb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--g500);">No users found.</td></tr>`;
+        } else {
+          utb.innerHTML = userData.map(u => `
+            <tr>
+              <td><div style="font-weight:500;">${u.name || 'User'}</div><div style="font-size:10px;color:var(--g500);">Reg: ${new Date(u.created_at).toLocaleDateString()}</div></td>
+              <td style="color:var(--g500);">${u.email}</td>
+              <td><span class="badge ${u.role === 'Admin' ? 'br' : 'bb'}">${u.role || 'User'}</span></td>
+              <td><span class="badge bg">Active</span></td>
+              <td><div style="display:flex;gap:4px;">
+                <button class="btn bs bxs" onclick="aUserAction('view', '${u.id}')">View</button>
+                <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="aUserAction('del', '${u.id}')">Del</button>
+              </div></td>
+            </tr>`).join('');
+        }
       }
 
-      // 3. ADMIN LISTINGS
+      // 3. ADMIN LISTINGS TABLE
       const ltb = document.getElementById('a-listings-tbody');
-      if (ltb) {
-        ltb.innerHTML = platformDB.listings.map(l => `
-          <tr>
-            <td><div style="font-weight:500;">${l.name}</div><div style="font-size:10px;color:var(--g500);">📍 ${l.location}</div></td>
-            <td style="color:var(--g500);">${l.landlord}</td>
-            <td><span class="badge bb">${l.type}</span></td>
-            <td style="font-weight:600;color:var(--blue);">KSh ${l.price.toLocaleString()}</td>
-            <td><span class="badge ${l.status === 'Available' ? 'bg' : 'ba'}">${l.status}</span></td>
-            <td><div style="display:flex;gap:4px;">
-              <button class="btn bs bxs" onclick="aPropAction('view', ${l.id})">View</button>
-              <button class="btn bs bxs" onclick="aPropAction('edit', ${l.id})">Edit</button>
-              <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="aPropAction('del', ${l.id})">Del</button>
-            </div></td>
-          </tr>`).join('');
+      if (ltb && listData) {
+        if (listData.length === 0) {
+          ltb.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--g500);">No listings registered yet.</td></tr>`;
+        } else {
+          ltb.innerHTML = listData.map(l => `
+            <tr>
+              <td><div style="font-weight:500;">${l.title || l.name}</div><div style="font-size:10px;color:var(--g500);">📍 ${l.location}</div></td>
+              <td style="color:var(--g500);">${l.profiles?.name || 'Unknown'}</td>
+              <td><span class="badge bb">${l.type}</span></td>
+              <td style="font-weight:600;color:var(--blue);">KSh ${(l.price || 0).toLocaleString()}</td>
+              <td><span class="badge ${l.status === 'Available' ? 'bg' : (l.status === 'Occupied' || l.status === 'Unavailable' ? 'ba' : 'bs')}">${l.status}</span></td>
+              <td><div style="display:flex;gap:4px;">
+                <button class="btn bs bxs" onclick="aPropAction('view', '${l.id}')">View</button>
+                <button class="btn bs bxs" onclick="aPropAction('edit', '${l.id}')">Edit</button>
+                <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="aPropAction('del', '${l.id}')">Del</button>
+              </div></td>
+            </tr>`).join('');
+        }
       }
     }
 
-    // Global Action Handlers
-    window.aUserAction = function (mode, id) {
-      const u = platformDB.users.find(x => x.id === id);
-      if (!u) return;
+    // Admin Handlers
+    window.aUserAction = async function (mode, id) {
       if (mode === 'del') {
-        showModal('Confirm Delete', `<p>Are you sure you want to delete user <b>${u.name}</b>?</p>`,
-          `<button class="btn br-btn" style="flex:1;" onclick="platformDB.users = platformDB.users.filter(x=>x.id !== ${id}); renderAllDynamic(); cmsCloseModal(); toast('🗑️ User deleted', true);">Delete</button>
-           <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`);
-      } else if (mode === 'edit') {
-        showModal('Edit User', `<div class="df"><label class="dfl">Name</label><input id="edt-u-name" value="${u.name}"></div>`,
-          `<button class="btn bp" style="flex:1;" onclick="const val=document.getElementById('edt-u-name').value; platformDB.users.find(x=>x.id===${id}).name=val; renderAllDynamic(); cmsCloseModal(); toast('✅ Changes saved', true);">Save</button>`);
+        if (!confirm('🗑️ Delete this user profile?')) return;
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) toast('❌ Error: ' + error.message, false);
+        else { toast('🗑️ User deleted', true); renderAllDynamic(); }
       } else {
-        showModal('View User', `<p><b>Name:</b> ${u.name}<br><b>Email:</b> ${u.email}<br><b>Role:</b> ${u.role}</p>`, `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>`);
+        const { data: u } = await supabase.from('profiles').select('*').eq('id', id).single();
+        showModal('User Details', `<p><b>Name:</b> ${u.name}<br><b>Email:</b> ${u.email}<br><b>Role:</b> ${u.role}</p>`, `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>`);
       }
     };
 
-    window.aPropAction = function (mode, id) {
-      const l = platformDB.listings.find(x => x.id === id);
-      if (!l) return;
+    window.aPropAction = async function (mode, id) {
       if (mode === 'del') {
-        showModal('Delete Listing', `<p>Delete <b>${l.name}</b>?</p>`,
-          `<button class="btn br-btn" style="flex:1;" onclick="platformDB.listings = platformDB.listings.filter(x=>x.id !== ${id}); renderAllDynamic(); cmsCloseModal(); toast('🗑️ Listing removed', true);">Delete</button>
-           <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`);
+        if (!confirm('🗑️ Delete this listing?')) return;
+        const { error } = await supabase.from('listings').delete().eq('id', id);
+        if (error) toast('❌ Error: ' + error.message, false);
+        else { toast('🗑️ Listing removed', true); renderAllDynamic(); }
       } else if (mode === 'edit') {
-        showModal('Edit Listing', `<div class="df"><label class="dfl">Price (KSh)</label><input id="edt-l-price" type="number" value="${l.price}"></div>`,
-          `<button class="btn bp" style="flex:1;" onclick="const val=document.getElementById('edt-l-price').value; platformDB.listings.find(x=>x.id===${id}).price=parseInt(val); renderAllDynamic(); cmsCloseModal(); toast('✅ Price updated', true);">Save</button>`);
+        const { data: l } = await supabase.from('listings').select('*, profiles(email)').eq('id', id).single();
+        showModal('Edit Property', `
+          <div style='text-align:left;display:flex;flex-direction:column;gap:12px;'>
+            <div class='df'><label class='dfl'>NAME</label><input type='text' id='edt-a-name' value="${l.title || l.name || ''}" style='width:100%'></div>
+            <div class='df'><label class='dfl'>LOCATION</label><input type='text' id='edt-a-loc' value="${l.location || ''}" style='width:100%'></div>
+            <div class='df'><label class='dfl'>TYPE</label><input type='text' id='edt-a-type' value="${l.type || ''}" style='width:100%'></div>
+            <div class='df'><label class='dfl'>PRICE (KSH)</label><input type='number' id='edt-a-price' value="${l.price || 0}" style='width:100%'></div>
+            <div class='df'><label class='dfl'>STATUS</label>
+              <select id='edt-a-status' style='width:100%'>
+                <option ${l.status === 'Available' ? 'selected' : ''}>Available</option>
+                <option ${l.status === 'Occupied' ? 'selected' : ''}>Occupied</option>
+                <option ${l.status === 'Unavailable' ? 'selected' : ''}>Unavailable</option>
+                <option ${l.status === 'Pending' ? 'selected' : ''}>Pending</option>
+              </select>
+            </div>
+          </div>`,
+          `<button class="btn bp" style="flex:1;" id="edt-a-save">Save changes</button>
+           <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
+        );
+        document.getElementById('edt-a-save').onclick = async () => {
+          const payload = {
+            title: document.getElementById('edt-a-name').value,
+            location: document.getElementById('edt-a-loc').value,
+            type: document.getElementById('edt-a-type').value,
+            price: parseInt(document.getElementById('edt-a-price').value),
+            status: document.getElementById('edt-a-status').value
+          };
+          const { error } = await supabase.from('listings').update(payload).eq('id', id);
+          if (error) toast('❌ ' + error.message, false);
+          else { toast('✅ Listing updated!', true); cmsCloseModal(); renderAllDynamic(); }
+        };
       } else {
-        showModal('Listing details', `<p><b>${l.name}</b><br>Landlord: ${l.landlord}<br>Price: KSh ${l.price.toLocaleString()}</p>`, `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>`);
+        const { data: l } = await supabase.from('listings').select('*, profiles(name)').eq('id', id).single();
+        showModal('Listing details', `<p><b>${l.title || l.name}</b><br>Landlord: ${l.profiles?.name}<br>Price: KSh ${l.price.toLocaleString()}</p>`, `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>`);
       }
     };
 
-    window.onload = () => { cmsRender(); renderAllDynamic(); };
+    window.runPropertySearch = function () {
+      const keyword = (document.getElementById('search-keyword')?.value || '').toLowerCase();
+      const area = (document.getElementById('search-area')?.value || '').toLowerCase();
+      const type = (document.getElementById('search-type')?.value || '').toLowerCase();
+
+      const cached = window.PLATFORM_LISTINGS_CACHE || [];
+      const filtered = cached.filter(p => {
+        const pLoc = (p.location || '').toLowerCase();
+        const pTitle = (p.title || p.name || '').toLowerCase();
+        const pType = (p.type || '').toLowerCase();
+
+        let matchKw = true, matchArea = true, matchType = true;
+        if (keyword) matchKw = pLoc.includes(keyword) || pTitle.includes(keyword);
+        if (area) matchArea = pLoc.includes(area);
+        if (type) matchType = pType.includes(type);
+
+        return matchKw && matchArea && matchType;
+      });
+
+      const psearch = document.getElementById('pgrid-search');
+      if (psearch) {
+        if (filtered.length === 0) {
+          psearch.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--g500);">
+            <div style="font-size:40px;margin-bottom:15px;">🔍</div>
+            <h3>No matching listings found</h3>
+          </div>`;
+        } else {
+          psearch.innerHTML = filtered.map(l => `
+            <div class="pcard" onclick="viewPropertyDetails('${l.id}')">
+              <div class="pthumb" style="${l.image_url ? `background-image: url('${l.image_url}'); background-size: cover; background-position: center;` : ''}">${l.image_url ? '' : '🏢'}<div class="pavail"><span class="badge ${l.status === 'Available' ? 'bg' : 'ba'}">${l.status}</span></div></div>
+              <div class="pinfo">
+                <div class="pprice">KSh ${(l.price || 0).toLocaleString()}/mo</div>
+                <div class="ploc">📍 ${l.location}</div>
+                <div class="ptags"><span class="badge bb">${l.type}</span></div>
+                <button class="btn bp bsm" style="width:100%;margin-top:8px">View details</button>
+              </div>
+            </div>`).join('');
+        }
+      }
+
+      const pCountHeader = document.getElementById('prop-count-header');
+      if (pCountHeader) pCountHeader.textContent = filtered.length;
+
+      const lms = document.getElementById('load-more-status');
+      if (lms) lms.textContent = `Showing ${filtered.length} of ${cached.length} properties`;
+    };
+
+    window.onload = () => {
+      if (typeof fetchSiteConfig === 'function') fetchSiteConfig();
+      if (typeof fetchCMSConfig === 'function') fetchCMSConfig();
+      renderAllDynamic();
+    };
   </script>
 </body>
 

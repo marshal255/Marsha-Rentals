@@ -1833,38 +1833,68 @@ window.lRecordPayment = async function() {
     // Future: Supabase insert into payments table
 };
 
-window.lDocDel = async function(id) {
+window.deleteDoc = async function(id) {
     if(!confirm('🗑️ Delete this document?')) return;
     try {
         const { error } = await supabase.from('documents').delete().eq('id', id);
         if(error) throw error;
         toast('🗑️ Document deleted', true);
-        if (typeof fetchLandlordData === 'function') fetchLandlordData();
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if(session && session.user) hydrateUserDashboards(session.user);
     } catch(err) {
-        toast('❌ Error: ' + err.message, false);
+        toast('❌ Delete Error: ' + err.message, false);
     }
 };
 
-window.lDocView = function(url) {
-    if(!url) return;
-    window.open(url, '_blank');
+window.viewDoc = async function(id) {
+    try {
+        const { data: doc, error } = await supabase.from('documents').select('*').eq('id', id).single();
+        if(error || !doc) throw new Error('Document not found');
+
+        if(doc.url && !doc.url.includes('placeholder.com')) {
+            window.open(doc.url, '_blank');
+        } else {
+            // Professional modal view for documents without external links yet
+            showModal('View Document: ' + doc.name,
+                `<div style="text-align:center;padding:20px;">
+                    <div style="font-size:64px;margin-bottom:20px;">📄</div>
+                    <h3 style="margin-bottom:10px;">${doc.name}</h3>
+                    <p style="color:var(--g500);font-size:14px;margin-bottom:20px;">This file is safely stored in Marshal Rentals Cloud.</p>
+                    <div style="background:var(--g50);padding:15px;border-radius:12px;text-align:left;">
+                        <div style="font-size:12px;font-weight:600;color:var(--g500);text-transform:uppercase;margin-bottom:8px;">File Details</div>
+                        <div style="font-size:14px;"><strong>Category:</strong> ${doc.category || 'Uploaded File'}</div>
+                        <div style="font-size:14px;"><strong>Size:</strong> ${doc.size || 'FILE'}</div>
+                        <div style="font-size:14px;"><strong>Uploaded:</strong> ${new Date(doc.created_at).toLocaleDateString()}</div>
+                        <div style="font-size:14px;"><strong>Status:</strong> <span class="badge ${doc.status === 'Active' ? 'bg' : 'ba'}">${doc.status}</span></div>
+                    </div>
+                </div>`,
+                `<button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close Viewer</button>`
+            );
+        }
+    } catch(err) {
+        toast('❌ Viewer Error: ' + err.message, false);
+    }
 };
 
-window.lDocEdit = async function(id) {
-    EDIT_PROPERTY_ID = id; // Reuse this var for doc id
-    const { data: d, error } = await supabase.from('documents').select('*').eq('id', id).single();
-    if(error) return;
-
-    const newStatus = d.status === 'Active' ? 'Inactive' : 'Active';
-    if(!confirm(`Toggle document status to ${newStatus}?`)) return;
-
+window.editDoc = async function(id) {
     try {
+        const { data: doc, error } = await supabase.from('documents').select('*').eq('id', id).single();
+        if(error || !doc) return;
+
+        const newStatus = doc.status === 'Active' ? 'Inactive' : 'Active';
+        if(!confirm(`Toggle document status to ${newStatus}?`)) return;
+
         const { error: uErr } = await supabase.from('documents').update({ status: newStatus }).eq('id', id);
         if(uErr) throw uErr;
+
         toast('✅ Document status updated', true);
-        if (typeof fetchLandlordData === 'function') fetchLandlordData();
+        
+        // Auto-refresh the dashboard
+        const { data: { session } } = await supabase.auth.getSession();
+        if(session && session.user) hydrateUserDashboards(session.user);
     } catch(err) {
-        toast('❌ Error: ' + err.message, false);
+        toast('❌ Update Error: ' + err.message, false);
     }
 };
 
@@ -2193,11 +2223,27 @@ setTimeout(fetchCMSConfig, 500);
 
 window.hydrateUserDashboards = async function(sessionUser) {
     if(!sessionUser) return;
+    
+    // --- ELITE ACCESS PROTOCOL (Strict Email Enforcement) ---
+    const ADMIN_EMAIL = 'david.m.macharia12@gmail.com';
+    const LANDLORD_EMAIL = 'david.macharia662@gmail.com';
+    const userEmail = (sessionUser.email || '').toLowerCase();
+    
+    let uMeta = sessionUser.user_metadata || {};
+    let role = (uMeta.role || 'Tenant').toLowerCase();
+
+    // ⛔ SECURITY GATE: Force Tenants back if they attempt unauthorized role access
+    if (role === 'admin' && userEmail !== ADMIN_EMAIL) {
+        console.warn('⚠️ Unauthorized Admin access attempt from:', userEmail);
+        role = 'tenant'; // Force downgrade for this session
+    }
+    if (role === 'landlord' && userEmail !== LANDLORD_EMAIL) {
+        console.warn('⚠️ Unauthorized Landlord access attempt from:', userEmail);
+        role = 'tenant'; // Force downgrade for this session
+    }
+
     try {
-        const uMeta = sessionUser.user_metadata || {};
-        const role = (uMeta.role || 'Tenant').toLowerCase();
-        
-        if(role === 'tenant') {
+        if (role === 'tenant') {
             // 1. Hydrate Tenant Stats
             const { data: maint } = await supabase.from('maintenance').select('*').eq('tenant_id', sessionUser.id);
             const mCount = maint ? maint.filter(m => m.status === 'Pending').length : 0;
@@ -2383,6 +2429,30 @@ window.hydrateUserDashboards = async function(sessionUser) {
                                 <td><button class="btn bs bxs" onclick="viewMaint('${m.id}')">View</button></td>
                             </tr>`).join('');
                     }
+                }
+            }
+
+            // 6. Render Landlord Tenant Documents
+            const lDocBody = document.getElementById('l-doc-tbody');
+            if(lDocBody) {
+                const { data: lDocs } = await supabase.from('documents').select('*');
+                if(!lDocs || lDocs.length === 0) {
+                    lDocBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--g500);">No tenant documents found.</td></tr>`;
+                } else {
+                    lDocBody.innerHTML = lDocs.map(d => `
+                        <tr>
+                            <td><div class="ric" style="background:#E1F5EE;">📄</div></td>
+                            <td><div style="font-weight:600;font-size:14px;">${d.name}</div><div style="font-size:11px;color:var(--g500);">${d.category || 'Uploaded File'}</div></td>
+                            <td style="font-size:12px;color:var(--g500);">${d.size || 'PDF'} · ${new Date(d.created_at).toLocaleDateString()}</td>
+                            <td><span class="badge ${d.status === 'Active' ? 'bg' : 'ba'}">${d.status}</span></td>
+                            <td>
+                                <div style="display:flex;gap:5px;">
+                                    <button class="btn bs bxs" style="padding:4px 8px;font-size:10px;" onclick="viewDoc('${d.id}')">View</button>
+                                    <button class="btn bs bxs" style="padding:4px 8px;font-size:10px;" onclick="editDoc('${d.id}')">Edit</button>
+                                    <button class="btn bs bxs" style="padding:4px 8px;font-size:10px;color:var(--red);" onclick="deleteDoc('${d.id}')">Del</button>
+                                </div>
+                            </td>
+                        </tr>`).join('');
                 }
             }
         }

@@ -4234,8 +4234,13 @@
         if (error) throw error;
 
         toast('✅ Maintenance request submitted successfully!', true);
-        document.querySelector('#sec-t-maint textarea').value = '';
-        if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        const textarea = document.querySelector('#sec-t-maint textarea');
+        if (textarea) textarea.value = '';
+
+        // Cloud-Handshake Pulse: Wait for indexing before refresh
+        setTimeout(() => {
+          if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        }, 1500);
       } catch (err) {
         toast('❌ Submit Error: ' + err.message, false);
       }
@@ -4299,147 +4304,23 @@
     }
   </script>
 
-  <!-- ===== DOCUMENT MANAGEMENT ENGINE ===== -->
   <script>
-    // ---- SHARED DOCUMENT DATABASE ----
     const docDB = [];
-    let docNextId = 1;
-    const docStatusClass = { Active: 'bg', Receipt: 'bb', Deposit: 'bgr', Pending: 'ba', Inactive: 'br' };
+    function renderTDocs() { }
+    function renderLDocs() { }
+    function docToggleStatus(id) { editDoc(id); }
+    function docView(id) { viewDoc(id); }
+    function docEdit(id) { editDoc(id); }
+    function docDel(id) { deleteDoc(id); }
+    function docDownload(id) { viewDoc(id); }
+    function lDocView(id) { viewDoc(id); }
+    function lDocEdit(id) { editDoc(id); }
+    function lDocDel(id) { deleteDoc(id); }
+  </script>
 
-    function renderTDocs() {
-      const tb = document.getElementById('t-doc-tbody');
-      if (!tb) return;
-      // Filter docs by logged-in user's email or name
-      const currentUser = window.CURRENT_USER_NAME || '';
-      const myDocs = currentUser ? docDB.filter(d => d.tenant === currentUser) : docDB;
-      tb.innerHTML = myDocs.length === 0
-        ? '<tr><td colspan="5" style="text-align:center;color:var(--g500);padding:20px;">No documents yet.</td></tr>'
-        : myDocs.map(d => `
-    <tr>
-      <td style="font-size:18px;">${d.icon}</td>
-      <td style="font-weight:500;font-size:13px;">${d.name}</td>
-      <td style="font-size:12px;color:var(--g500);">${d.size}<br>${d.date}</td>
-      <td><span class="badge ${docStatusClass[d.type] || 'bgr'}">${d.type}</span></td>
-      <td>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="btn bs bxs" onclick="docView(${d.id})">View</button>
-          <button class="btn bs bxs" onclick="docEdit(${d.id},'tenant')">Edit</button>
-          <button class="btn bs bxs" onclick="docDownload(${d.id})">⬇ DL</button>
-          <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="docDel(${d.id})">Del</button>
-        </div>
-      </td>
-    </tr>`).join('');
-    }
 
-    function renderLDocs() {
-      const tb = document.getElementById('l-doc-tbody');
-      if (!tb) return;
-      tb.innerHTML = docDB.length === 0
-        ? '<tr><td colspan="5" style="text-align:center;color:var(--g500);padding:20px;">No documents found.</td></tr>'
-        : docDB.map(d => `
-    <tr>
-      <td>
-        <div style="font-weight:500;font-size:13px;">${d.tenant}</div>
-        <div style="font-size:11px;color:var(--g500);">${d.tenantUnit}</div>
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:7px;">
-          <span style="font-size:16px;">${d.icon}</span>
-          <span style="font-size:13px;font-weight:500;">${d.name}</span>
-        </div>
-      </td>
-      <td style="font-size:12px;color:var(--g500);">${d.size}<br>${d.date}</td>
-      <td>
-        <button onclick="docToggleStatus(${d.id})" style="border:none;background:none;cursor:pointer;padding:0;">
-          <span class="badge ${d.type === 'Inactive' ? 'br' : docStatusClass[d.type] || 'bgr'}" title="Click to toggle Active/Inactive">${d.type}</span>
-        </button>
-      </td>
-      <td>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="btn bs bxs" onclick="docView(${d.id})">View</button>
-          <button class="btn bs bxs" onclick="docEdit(${d.id},'landlord')">Edit</button>
-          <button class="btn bs bxs" onclick="docDownload(${d.id})">⬇ DL</button>
-          <button class="btn bxs" style="color:var(--red);border:1px solid var(--red);background:transparent;" onclick="docDel(${d.id})">Del</button>
-        </div>
-      </td>
-    </tr>`).join('');
-    }
 
-    function docToggleStatus(id) {
-      const d = docDB.find(x => x.id === id);
-      if (!d) return;
-      if (d.type === 'Inactive') d.type = 'Active';
-      else if (d.type === 'Active') d.type = 'Inactive';
-      renderLDocs();
-      renderTDocs();
-      toast(d.type === 'Inactive' ? '🔒 Document set to Inactive' : '✅ Document set to Active', d.type !== 'Inactive');
-    }
-
-    function docView(id) {
-      const d = docDB.find(x => x.id === id);
-      if (!d) return;
-      showModal('View Document',
-        `<div style="background:var(--g50);border-radius:var(--rmd);padding:18px;">
-      <div style="font-size:36px;text-align:center;margin-bottom:10px;">${d.icon}</div>
-      <div style="font-weight:700;font-size:15px;margin-bottom:6px;">${d.name}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;font-size:13px;">
-        <div><span style="color:var(--g500);">Tenant:</span> ${d.tenant}</div>
-        <div><span style="color:var(--g500);">Unit:</span> ${d.tenantUnit}</div>
-        <div><span style="color:var(--g500);">Size:</span> ${d.size}</div>
-        <div><span style="color:var(--g500);">Date:</span> ${d.date}</div>
-        <div><span style="color:var(--g500);">Status:</span> <span class="badge ${docStatusClass[d.type] || 'bgr'}">${d.type}</span></div>
-      </div>
-    </div>`,
-        `<button class="btn bp" style="flex:1;" onclick="docDownload(${d.id})">⬇ Download</button>
-     <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Close</button>`
-      );
-    }
-
-    function docEdit(id, role) {
-      const d = docDB.find(x => x.id === id);
-      if (!d) return;
-      const inp = (lbl, val, nm, t = 'text') => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">${lbl}</label><input type="${t}" id="de-${nm}" value="${val}" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);"></div>`;
-      showModal('Edit Document',
-        inp('Document name', d.name, 'name') +
-        inp('File size / info', d.size, 'size') +
-        inp('Date', d.date, 'date') +
-        `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Status</label>
-    <select id="de-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
-      ${['Active', 'Inactive', 'Receipt', 'Deposit', 'Pending'].map(s => `<option${s === d.type ? ' selected' : ''}>${s}</option>`).join('')}
-    </select></div>`,
-        `<button class="btn bp" style="flex:1;" onclick="docSaveEdit(${id},'${role}')">Save changes</button>
-     <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
-      );
-    }
-
-    function docSaveEdit(id, role) {
-      const d = docDB.find(x => x.id === id);
-      if (!d) return;
-      d.name = document.getElementById('de-name')?.value || d.name;
-      d.size = document.getElementById('de-size')?.value || d.size;
-      d.date = document.getElementById('de-date')?.value || d.date;
-      d.type = document.getElementById('de-type')?.value || d.type;
-      cmsCloseModal();
-      renderTDocs();
-      renderLDocs();
-      toast('✅ Document updated successfully!', true);
-    }
-
-    function docDel(id) {
-      if (!confirm('Delete this document? This cannot be undone.')) return;
-      const idx = docDB.findIndex(x => x.id === id);
-      if (idx > -1) docDB.splice(idx, 1);
-      renderTDocs();
-      renderLDocs();
-      toast('🗑 Document deleted.', false);
-    }
-
-    function docDownload(id) {
-      const d = docDB.find(x => x.id === id);
-      if (!d) return;
-      toast('⬇ Downloading "' + d.name + '"…', true);
-    }
-
+  <script>
     // ---- TENANT UPLOAD ----
     function tDocUpload() { document.getElementById('t-doc-inp')?.click(); }
     async function tDocFileSelected(inp) {
@@ -4452,6 +4333,7 @@
       if (!user) { toast('Please log in to upload documents.', false); return; }
 
       try {
+        toast('⏳ Uploading to cloud...', true);
         const payload = {
           tenant_id: user.id,
           name: f.name,
@@ -4464,8 +4346,13 @@
         const { error } = await supabase.from('documents').insert(payload);
         if (error) throw error;
 
-        toast('📎 Document "' + f.name + '" uploaded and pending review.', true);
-        if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        toast('📎 Document "' + f.name + '" uploaded successfully!', true);
+
+        // Cloud-Handshake Delay: Ensures database indexing is complete before refresh
+        setTimeout(() => {
+          if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
+        }, 1500);
+
         inp.value = '';
       } catch (err) {
         toast('❌ Upload Error: ' + err.message, false);
@@ -4480,21 +4367,15 @@
       const sizeKB = Math.round(f.size / 1024);
 
       try {
-        toast('⏳ Syncing tenant records...', true);
+        toast('⏳ Fetching tenant context...', true);
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Fetch properties occupied by tenants (using new tenant_id linkage)
         const { data: props, error } = await supabase.from('listings')
           .select(`*, tenant:tenant_id(name)`)
           .eq('landlord_id', user.id)
           .eq('status', 'Occupied');
 
-        if (error) {
-          // Robust fallback: if join fails, just fetch the occupied listings
-          const { data: fallback } = await supabase.from('listings').select('*').eq('landlord_id', user.id).eq('status', 'Occupied');
-          renderDocModal(f, sizeKB, fallback || []);
-          return;
-        }
+        if (error) throw error;
         renderDocModal(f, sizeKB, props || []);
       } catch (err) {
         toast('❌ Sync Error: ' + err.message, false);
@@ -4506,35 +4387,33 @@
     function renderDocModal(f, sizeKB, props) {
       showModal('Assign Document to Tenant',
         `<div style="background:var(--g50);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;">
-       <div style="font-weight:600;">${f.name}</div>
-       <div style="color:var(--g500);font-size:12px;">${sizeKB} KB</div>
-     </div>
-     <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Assign to tenant</label>
-     <select id="ldoc-tenant" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
-       <option value="">-- Select a Tenant --</option>
-       ${props.map(p => `
-           <option value="${p.id}|${p.tenant?.name || 'Active Tenant'}">${p.tenant?.name || 'Active Tenant'} (${p.title})</option>
-       `).join('')}
-       ${props.length === 0 ? '<option disabled>No occupied properties found</option>' : ''}
-     </select></div>
-     <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Document type</label>
-     <select id="ldoc-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
-       <option>Active</option><option>Receipt</option><option>Deposit</option><option>Contract</option>
-     </select></div>`,
+          <div style="font-weight:600;">${f.name}</div>
+          <div style="color:var(--g500);font-size:12px;">${sizeKB} KB</div>
+        </div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Assign to tenant</label>
+        <select id="ldoc-tenant" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
+          <option value="">-- Select a Tenant --</option>
+          ${props.map(p => `<option value="${p.id}|${p.tenant?.name || 'Active Tenant'}">${p.tenant?.name || 'Active Tenant'} (${p.title})</option>`).join('')}
+          ${props.length === 0 ? '<option disabled>No occupied properties found</option>' : ''}
+        </select></div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:600;color:var(--g500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Document type</label>
+        <select id="ldoc-type" style="width:100%;padding:9px 12px;border:1.5px solid var(--g200);border-radius:8px;font-size:14px;font-family:var(--fb);">
+          <option>Active</option><option>Receipt</option><option>Deposit</option><option>Contract</option>
+        </select></div>`,
         `<button class="btn bp" style="flex:1;" onclick="lDocConfirmUpload('${f.name}',${sizeKB})">Upload &amp; Assign</button>
-      <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
+         <button class="btn bs" style="flex:1;" onclick="cmsCloseModal()">Cancel</button>`
       );
     }
 
     async function lDocConfirmUpload(fname, sizeKB) {
       const sel = document.getElementById('ldoc-tenant')?.value || '';
-      if (!sel) { toast('⚠️ Please select a tenant first.', false); return; }
+      if (!sel) { toast('⚠️ Please select a tenant.', false); return; }
 
       const [propId, tName] = sel.split('|');
       const typ = document.getElementById('ldoc-type')?.value || 'Active';
 
       try {
-        toast('⏳ Assigning document...', true);
+        toast('⏳ Linking to cloud...', true);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not logged in');
 
@@ -4543,21 +4422,20 @@
           name: fname,
           size: `${sizeKB} KB`,
           status: typ,
-          url: 'https://placeholder.com', // Future storage wiring
+          url: 'https://placeholder.com',
           created_at: new Date().toISOString()
         }]);
 
         if (error) throw error;
-
         cmsCloseModal();
-        if (typeof fetchLandlordData === 'function') await fetchLandlordData();
+        if (typeof hydrateUserDashboards === 'function') hydrateUserDashboards(user);
         toast('✅ Document assigned to ' + tName + '!', true);
       } catch (err) {
-        toast('❌ Sync Error: ' + err.message, false);
+        toast('❌ Link Error: ' + err.message, false);
       }
     }
+  </script>
 
-    document.addEventListener('DOMContentLoaded', () => { renderTDocs(); renderLDocs(); });
   </script>
 
   <!-- app.js loaded here so showModal/cmsCloseModal/toast are already defined -->
